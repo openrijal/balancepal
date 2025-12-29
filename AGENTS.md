@@ -218,7 +218,17 @@ This is a **mobile-first** application. Design decisions should prioritize:
 
 ## Current Phase
 
-**Phase 2: Authentication & Core Architecture** - Implemented Provide/Inject pattern, SSR-compatible Authentication, and strict typing.
+**Phase 3: Group Management & Features** - Implementing core functional flows: Groups, Members, and Expenses.
+- [x] Group Management (Create, List, Details)
+- [x] Member Management (Invite, Roles)
+- [ ] Expense Tracking (Create, Split, List)
+
+**Phase 2: Authentication & Core Architecture** - Completed
 - [x] Refactor Auth to SSR (Cookie-based)
 - [x] Implement DI (Provide/Inject) Infrastructure
 - [x] Migrate to Strict Types (No `any`)
+
+**Phase 1: Project Integration & Setup** - Completed
+- [x] Initial Project Setup
+- [x] Database Schema & ORM Setup
+- [x] Basic UI Components

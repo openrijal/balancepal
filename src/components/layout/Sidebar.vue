@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useSupabase } from '@/composables/useSupabase';
 import { Home, Users, Receipt, Wallet, Bell, User, LogOut, Plus } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 
@@ -28,6 +29,24 @@ const navItems = [
 
 const isActive = (href: string) => {
   return currentPath.value === href || currentPath.value.startsWith(href + '/');
+};
+
+const handleLogout = async () => {
+  try {
+    // 1. Sign out from Supabase (clears client storage)
+    const supabase = useSupabase(); // We need to import useSupabase/createBrowserClient or just rely on global if available.
+    // Better to dynamic import or use composable if inside setup
+    // But we are inside script setup.
+    await supabase.auth.signOut();
+
+    // 2. Sign out from Server (clears cookies)
+    await fetch('/api/auth/signout', { method: 'POST' });
+    
+    window.location.href = '/login';
+  } catch (error) {
+    console.error('Logout failed:', error);
+    window.location.href = '/login';
+  }
 };
 </script>
 
@@ -121,7 +140,7 @@ const isActive = (href: string) => {
       <!-- Logout -->
       <button
         class="flex w-full items-center gap-3 px-6 py-3 text-gray-600 transition-colors hover:bg-gray-50"
-        @click="$emit('logout')"
+        @click="handleLogout"
       >
         <LogOut class="h-5 w-5" />
         <span>Log out</span>

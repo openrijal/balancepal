@@ -42,6 +42,16 @@ async function handleSubmit() {
     }
 
     if (data.session) {
+      // Set cookies on server
+      await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        }),
+      });
+
       // Redirect to dashboard or requested page
       window.location.href = props.redirectTo;
     }

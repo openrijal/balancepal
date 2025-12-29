@@ -1,0 +1,71 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import CreateGroupForm from '@/components/groups/CreateGroupForm.vue';
+import { GroupService } from '@/services/groups';
+import { supabase } from '@/lib/supabase';
+
+const accessToken = Astro.cookies.get('sb-access-token')?.value;
+const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
+
+if (!accessToken || !refreshToken) {
+  return Astro.redirect('/login');
+}
+
+const {
+  data: { user },
+  error,
+} = await supabase.auth.getUser(accessToken);
+
+if (error || !user) {
+  return Astro.redirect('/login');
+}
+
+const groups = await GroupService.getUserGroups(user.id);
+---
+
+<AppLayout title="My Groups">
+  <div class="container mx-auto px-4 py-8">
+    <div class="mb-8 flex items-center justify-between">
+      <div>
+        <h1 class="text-foreground text-3xl font-bold tracking-tight">My Groups</h1>
+        <p class="text-muted-foreground mt-1">Manage your expense sharing groups.</p>
+      </div>
+      <CreateGroupForm client:load />
+    </div>
+
+    {
+      groups.length === 0 ? (
+        <div class="bg-muted/30 border-muted-foreground/25 rounded-lg border border-dashed py-12 text-center">
+          <div class="space-y-3">
+            <h3 class="text-lg font-medium">No groups yet</h3>
+            <p class="text-muted-foreground mx-auto max-w-sm">
+              Create a group to start splitting expenses with your friends, roommates, or family.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {groups.map((group) => (
+            <a
+              href={`/groups/${group.id}`}
+              class="group bg-card hover:border-primary/50 relative flex flex-col justify-between space-y-4 rounded-xl border p-6 shadow-sm transition-all hover:shadow-md"
+            >
+              <div class="space-y-2">
+                <h3 class="group-hover:text-primary text-xl leading-none font-semibold tracking-tight transition-colors">
+                  {group.name}
+                </h3>
+                {group.description && (
+                  <p class="text-muted-foreground line-clamp-2 text-sm">{group.description}</p>
+                )}
+              </div>
+
+              <div class="text-muted-foreground flex items-center text-sm">
+                <span class="flex items-center">View Details &rarr;</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</AppLayout>

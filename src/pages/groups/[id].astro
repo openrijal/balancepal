@@ -1,0 +1,95 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import GroupHeader from '@/components/groups/GroupHeader.vue';
+import { GroupService } from '@/services/groups';
+import { supabase } from '@/lib/supabase';
+
+const { id } = Astro.params;
+
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+if (!id || !uuidRegex.test(id)) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
+const accessToken = Astro.cookies.get('sb-access-token')?.value;
+const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
+
+if (!accessToken || !refreshToken) {
+  return Astro.redirect('/login');
+}
+
+const {
+  data: { user },
+  error,
+} = await supabase.auth.getUser(accessToken);
+
+if (error || !user) {
+  return Astro.redirect('/login');
+}
+
+const group = await GroupService.getGroupDetails(id);
+
+if (!group) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
+// Check if user is a member of this group
+const isMember = group.members.some((m) => m.user.id === user.id);
+if (!isMember) {
+  return Astro.redirect('/groups'); // Or show access denied
+}
+---
+
+<AppLayout title={group.name}>
+  <div class="container mx-auto px-4 py-8">
+    <GroupHeader
+      client:load
+      groupId={group.id}
+      groupName={group.name}
+      description={group.description}
+    />
+
+    <div class="grid gap-6 md:grid-cols-3">
+      <!-- Main Content (Expenses List Placeholder) -->
+      <div class="space-y-4 md:col-span-2">
+        <h2 class="text-xl font-semibold">Expenses</h2>
+        <div class="text-muted-foreground rounded-lg border border-dashed p-8 text-center">
+          No expenses yet.
+        </div>
+      </div>
+
+      <!-- Sidebar (Members) -->
+      <div class="space-y-6">
+        <div class="bg-card text-card-foreground rounded-lg border p-4 shadow-sm">
+          <h3 class="mb-4 font-semibold">Members</h3>
+          <ul class="space-y-3">
+            {
+              group.members.map((member) => (
+                <li class="flex items-center gap-3">
+                  <div class="bg-secondary relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full">
+                    <span class="bg-muted flex h-full w-full items-center justify-center rounded-full text-xs font-medium uppercase">
+                      {member.user.name?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                  <div class="flex-1 overflow-hidden">
+                    <p class="truncate text-sm leading-none font-medium">{member.user.name}</p>
+                    <p class="text-muted-foreground truncate text-xs">
+                      {member.role === 'admin' ? 'Admin' : 'Member'}
+                    </p>
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</AppLayout>

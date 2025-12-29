@@ -13,4 +13,4 @@ export default getViteConfig({
       '@': '/src',
     },
   },
-});
+} as any);
