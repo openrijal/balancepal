@@ -66,7 +66,9 @@ balancepal/
 │   │   ├── expenses/       # Mostly Vue
 │   │   ├── balances/       # Mix
 │   │   ├── ui/             # Shared components
+│   │   ├── providers/      # Vue Dependency Providers
 │   │   └── layout/         # Mostly Astro
+│   ├── composables/        # Vue Composables (useSupabase, useAuth)
 │   ├── db/
 │   │   ├── schema.ts       # Drizzle schema definitions
 │   │   ├── index.ts        # Drizzle client
@@ -75,7 +77,8 @@ balancepal/
 │   │   ├── BaseLayout.astro
 │   │   └── AppLayout.astro
 │   ├── lib/
-│   │   └── supabase.ts     # Supabase client (auth only)
+│   │   ├── supabase.ts         # Supabase client (auth only)
+│   │   └── supabase-browser.ts # SSR-compatible Browser client
 │   ├── pages/              # Astro pages (SSR)
 │   ├── services/           # API service layer
 │   ├── stores/             # Pinia stores
@@ -105,7 +108,8 @@ balancepal/
 | `src/app.ts` | Pinia initialization for Vue |
 | `src/db/schema.ts` | Database schema (Drizzle) |
 | `src/db/index.ts` | Drizzle client instance |
-| `src/lib/supabase.ts` | Supabase client (auth, storage, realtime) |
+| `src/components/providers/AppProvider.vue` | Root provider for Dependency Injection |
+| `src/lib/supabase-browser.ts` | SSR-compatible Supabase browser client |
 | `src/styles/global.css` | TailwindCSS v4 theme |
 
 ## Environment Variables
@@ -164,7 +168,10 @@ npx cap open android  # Open Android Studio
 ## Coding Conventions
 
 ### TypeScript
-- Use strict mode, no `any`
+- Use strict mode, no `any`. **Explicit Rule**: Do NOT use the `any` type. All variables and functions must be strictly typed.
+- **Injection Keys**: Use strictly typed injection keys for Vue `provide`/`inject` patterns.
+- **Provide/Inject**: Use the Provide/Inject pattern for global dependencies (Supabase, Auth) instead of prop drilling or global singletons.
+- **Supabase**: Use `@supabase/ssr` for cookie-based authentication.
 - Define types in `src/types/`
 - Use Zod for runtime validation
 
@@ -173,6 +180,7 @@ npx cap open android  # Open Android Studio
 - Props with TypeScript interfaces
 - Emit events with typed definitions
 - Use Pinia stores for shared state
+- Use `useSupabase()` and `useAuth()` composables
 
 ### Astro Pages
 - Always import from `BaseLayout.astro` or `AppLayout.astro`
@@ -210,6 +218,7 @@ This is a **mobile-first** application. Design decisions should prioritize:
 
 ## Current Phase
 
-**Phase 1: Foundation** - Setting up project infrastructure, database schema, and base components.
-
-See `LEARNINGS.gemini.md` for task history and lessons learned.
+**Phase 2: Authentication & Core Architecture** - Implemented Provide/Inject pattern, SSR-compatible Authentication, and strict typing.
+- [x] Refactor Auth to SSR (Cookie-based)
+- [x] Implement DI (Provide/Inject) Infrastructure
+- [x] Migrate to Strict Types (No `any`)

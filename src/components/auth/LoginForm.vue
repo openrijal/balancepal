@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { createClient } from '@supabase/supabase-js';
+import { useSupabase } from '@/composables/useSupabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertCircle, Loader2, Mail, Lock } from 'lucide-vue-next';
@@ -19,10 +19,6 @@ const password = ref('');
 const loading = ref(false);
 const error = ref<string | null>(null);
 
-// Create Supabase client for browser
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY;
-
 async function handleSubmit() {
   if (!email.value || !password.value) {
     error.value = 'Please fill in all fields';
@@ -33,7 +29,7 @@ async function handleSubmit() {
   error.value = null;
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = useSupabase();
     
     const { data, error: authError } = await supabase.auth.signInWithPassword({
       email: email.value,

@@ -1,43 +1,62 @@
 ---
-import '../styles/global.css';
+import "../styles/global.css";
 
 interface Props {
   title?: string;
   description?: string;
+  themeColor?: string;
 }
 
-const { 
-  title = 'Balance Pal - Your pal for balancing expenses',
-  description = 'A friendly expense splitting app that helps groups track shared costs, split bills fairly, and settle debts with minimal hassle.'
+const {
+  title = "Balance Pal - Your pal for balancing expenses",
+  description = "A friendly expense splitting app that helps groups track shared costs, split bills fairly, and settle debts with minimal hassle.",
+  themeColor = "#009799",
 } = Astro.props;
+
+import AppProvider from "@/components/providers/AppProvider.vue";
+
+const supabaseUrl = import.meta.env.SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.SUPABASE_ANON_KEY;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#009799" />
-    
+    <meta name="theme-color" content={themeColor} />
+
     <!-- PWA / Mobile App Meta -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Balance Pal" />
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <title>{title}</title>
   </head>
   <body class="min-h-screen">
-    <slot />
+    <AppProvider
+      client:only="vue"
+      supabaseUrl={supabaseUrl}
+      supabaseAnonKey={supabaseAnonKey}
+    >
+      <slot />
+    </AppProvider>
   </body>
 </html>

@@ -38,7 +38,7 @@ const { data: profile } = await supabase
                         user.email?.split("@")[0] ??
                         ""}
                     email={user.email ?? ""}
-                    avatarUrl={profile?.profile_picture_url ?? null}
+                    avatarUrl={profile?.avatar_url ?? null}
                 />
             </div>
         </div>

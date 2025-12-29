@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { createClient } from '@supabase/supabase-js';
+import { useSupabase } from '@/composables/useSupabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertCircle, Loader2, Mail, Lock, User, Check } from 'lucide-vue-next';
@@ -13,10 +13,6 @@ const confirmPassword = ref('');
 const loading = ref(false);
 const error = ref<string | null>(null);
 const success = ref(false);
-
-// Create Supabase client for browser
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY;
 
 // Password strength
 const passwordStrength = computed(() => {
@@ -56,7 +52,7 @@ async function handleSubmit() {
   error.value = null;
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = useSupabase();
     
     // Sign up
     const { data, error: authError } = await supabase.auth.signUp({

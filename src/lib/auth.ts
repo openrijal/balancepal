@@ -1,7 +1,7 @@
 /**
  * Server-side authentication helpers
  */
-import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import type { AstroCookies } from 'astro';
 
 const supabaseUrl = import.meta.env.SUPABASE_URL;
@@ -14,7 +14,27 @@ export function createSupabaseServerClient(cookies: AstroCookies) {
     return createServerClient(supabaseUrl, supabaseAnonKey, {
         cookies: {
             getAll() {
-                return parseCookieHeader(cookies.get('sb-access-token')?.value ?? '');
+                const allCookies: { name: string; value: string }[] = [];
+
+                // Supabase auth cookies follow the pattern: sb-<project-ref>-auth-token
+                // We need to get all cookies from Astro and filter for Supabase ones
+                const projectRef = supabaseUrl.match(/https:\/\/(.+?)\.supabase/)?.[1] || '';
+                const authTokenName = `sb-${projectRef}-auth-token`;
+
+                // Get the main auth token cookie
+                const authToken = cookies.get(authTokenName);
+                if (authToken?.value) {
+                    allCookies.push({ name: authTokenName, value: authToken.value });
+                }
+
+                // Also check for code verifier cookie (used in PKCE flow)
+                const codeVerifierName = `sb-${projectRef}-auth-token-code-verifier`;
+                const codeVerifier = cookies.get(codeVerifierName);
+                if (codeVerifier?.value) {
+                    allCookies.push({ name: codeVerifierName, value: codeVerifier.value });
+                }
+
+                return allCookies;
             },
             setAll(cookiesToSet) {
                 cookiesToSet.forEach(({ name, value, options }) => {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { createClient } from '@supabase/supabase-js';
+import { useSupabase } from '@/composables/useSupabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertCircle, Loader2, Mail, Check } from 'lucide-vue-next';
@@ -10,10 +10,6 @@ const email = ref('');
 const loading = ref(false);
 const error = ref<string | null>(null);
 const success = ref(false);
-
-// Create Supabase client
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY;
 
 async function handleSubmit() {
   if (!email.value) {
@@ -25,7 +21,7 @@ async function handleSubmit() {
   error.value = null;
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = useSupabase();
     
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.value, {
       redirectTo: `${window.location.origin}/reset-password`,
