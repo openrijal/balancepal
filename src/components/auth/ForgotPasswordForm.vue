@@ -22,7 +22,7 @@ async function handleSubmit() {
 
   try {
     const supabase = useSupabase();
-    
+
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.value, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
@@ -44,31 +44,35 @@ async function handleSubmit() {
 
 <template>
   <!-- Success State -->
-  <div v-if="success" class="text-center py-4">
-    <div class="w-16 h-16 bg-success-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-      <Check class="w-8 h-8 text-success-500" />
+  <div v-if="success" class="py-4 text-center">
+    <div
+      class="bg-success-500/20 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+    >
+      <Check class="text-success-500 h-8 w-8" />
     </div>
-    <h2 class="text-xl font-semibold text-gray-900 mb-2">Check your email</h2>
+    <h2 class="mb-2 text-xl font-semibold text-gray-900">Check your email</h2>
     <p class="text-gray-600">
-      If an account exists for <strong>{{ email }}</strong>, we've sent a password reset link.
+      If an account exists for <strong>{{ email }}</strong
+      >, we've sent a password reset link.
     </p>
   </div>
 
   <!-- Form -->
-  <form v-else @submit.prevent="handleSubmit" class="space-y-4">
+  <form v-else class="space-y-4" @submit.prevent="handleSubmit">
     <!-- Error Alert -->
-    <div v-if="error" class="bg-danger-500/10 text-danger-500 rounded-lg p-3 flex items-start gap-2 text-sm">
-      <AlertCircle class="w-5 h-5 flex-shrink-0 mt-0.5" />
+    <div
+      v-if="error"
+      class="bg-danger-500/10 text-danger-500 flex items-start gap-2 rounded-lg p-3 text-sm"
+    >
+      <AlertCircle class="mt-0.5 h-5 w-5 flex-shrink-0" />
       <span>{{ error }}</span>
     </div>
-    
+
     <!-- Email -->
     <div class="space-y-2">
-      <label for="email" class="block text-sm font-medium text-gray-700">
-        Email
-      </label>
+      <label for="email" class="block text-sm font-medium text-gray-700"> Email </label>
       <div class="relative">
-        <Mail class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Mail class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
         <Input
           id="email"
           v-model="email"
@@ -80,10 +84,10 @@ async function handleSubmit() {
         />
       </div>
     </div>
-    
+
     <!-- Submit Button -->
     <Button type="submit" class="w-full" :disabled="loading">
-      <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
+      <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
       {{ loading ? 'Sending...' : 'Send reset link' }}
     </Button>
   </form>

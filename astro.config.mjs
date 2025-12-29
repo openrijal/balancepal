@@ -8,17 +8,17 @@ import node from '@astrojs/node';
 export default defineConfig({
   output: 'server',
   adapter: node({
-    mode: 'standalone'
+    mode: 'standalone',
   }),
   integrations: [
     vue({
-      appEntrypoint: '/src/app.ts'
-    })
+      appEntrypoint: '/src/app.ts',
+    }),
   ],
   vite: {
     plugins: [tailwindcss()],
     ssr: {
-      noExternal: ['@supabase/supabase-js']
-    }
-  }
+      noExternal: ['@supabase/supabase-js'],
+    },
+  },
 });

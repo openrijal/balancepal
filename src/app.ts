@@ -6,6 +6,6 @@ import { createPinia } from 'pinia';
  * This file is loaded by @astrojs/vue for each island
  */
 export default (app: App) => {
-    const pinia = createPinia();
-    app.use(pinia);
+  const pinia = createPinia();
+  app.use(pinia);
 };

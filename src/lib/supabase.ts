@@ -5,9 +5,7 @@ const supabaseUrl = import.meta.env.SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-        'Missing Supabase environment variables. Please check your .env file.'
-    );
+  throw new Error('Missing Supabase environment variables. Please check your .env file.');
 }
 
 /**
@@ -15,11 +13,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Used in Astro pages and API routes
  */
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-    }
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
 });
 
 /**
@@ -27,12 +25,12 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
  * Used in Vue components (client:load, etc.)
  */
 export function createBrowserClient() {
-    return createClient<Database>(supabaseUrl, supabaseAnonKey, {
-        auth: {
-            autoRefreshToken: true,
-            persistSession: true,
-            detectSessionInUrl: true,
-            flowType: 'pkce'
-        }
-    });
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+    },
+  });
 }

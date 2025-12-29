@@ -9,9 +9,9 @@ export const supabaseKey: InjectionKey<SupabaseClient> = Symbol('supabase');
 
 // Auth State Injection Key
 export interface AuthState {
-    user: Ref<User | null>;
-    loading: Ref<boolean>;
-    isAuthenticated: Ref<boolean>;
+  user: Ref<User | null>;
+  loading: Ref<boolean>;
+  isAuthenticated: Ref<boolean>;
 }
 
 export const authKey: InjectionKey<AuthState> = Symbol('auth');

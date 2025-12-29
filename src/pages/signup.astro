@@ -1,53 +1,35 @@
 ---
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import SignupForm from "@/components/auth/SignupForm.vue";
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SignupForm from '@/components/auth/SignupForm.vue';
 ---
 
-<BaseLayout
-    title="Sign Up - Balance Pal"
-    description="Create your Balance Pal account"
->
-    <main
-        class="min-h-screen bg-gradient-to-br from-mint/20 via-sage/20 to-lavender/20 flex items-center justify-center p-4"
-    >
-        <div class="w-full max-w-md">
-            <!-- Logo -->
-            <div class="text-center mb-8">
-                <a href="/" class="inline-flex items-center gap-2">
-                    <div
-                        class="w-12 h-12 bg-sage rounded-xl flex items-center justify-center"
-                    >
-                        <span class="text-white font-bold text-2xl">B</span>
-                    </div>
-                    <span class="font-semibold text-2xl text-gray-900"
-                        >Balance Pal</span
-                    >
-                </a>
-            </div>
+<BaseLayout title="Sign Up - Balance Pal" description="Create your Balance Pal account">
+  <main
+    class="from-mint/20 via-sage/20 to-lavender/20 flex min-h-screen items-center justify-center bg-gradient-to-br p-4"
+  >
+    <div class="w-full max-w-md">
+      <!-- Logo -->
+      <div class="mb-8 text-center">
+        <a href="/" class="inline-flex items-center gap-2">
+          <div class="bg-sage flex h-12 w-12 items-center justify-center rounded-xl">
+            <span class="text-2xl font-bold text-white">B</span>
+          </div>
+          <span class="text-2xl font-semibold text-gray-900">Balance Pal</span>
+        </a>
+      </div>
 
-            <!-- Signup Card -->
-            <div
-                class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8"
-            >
-                <h1 class="text-2xl font-bold text-gray-900 mb-2">
-                    Create an account
-                </h1>
-                <p class="text-gray-600 mb-6">
-                    Start splitting expenses with friends
-                </p>
+      <!-- Signup Card -->
+      <div class="rounded-2xl border border-gray-100 bg-white p-8 shadow-xl">
+        <h1 class="mb-2 text-2xl font-bold text-gray-900">Create an account</h1>
+        <p class="mb-6 text-gray-600">Start splitting expenses with friends</p>
 
-                <SignupForm client:load />
+        <SignupForm client:load />
 
-                <div class="mt-6 text-center text-sm">
-                    <span class="text-gray-600">Already have an account? </span>
-                    <a
-                        href="/login"
-                        class="text-primary-600 hover:text-primary-700 font-medium"
-                    >
-                        Log in
-                    </a>
-                </div>
-            </div>
+        <div class="mt-6 text-center text-sm">
+          <span class="text-gray-600">Already have an account? </span>
+          <a href="/login" class="text-primary-600 hover:text-primary-700 font-medium"> Log in </a>
         </div>
-    </main>
+      </div>
+    </div>
+  </main>
 </BaseLayout>

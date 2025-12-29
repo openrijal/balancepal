@@ -10,7 +10,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  redirectTo: '/dashboard'
+  redirectTo: '/dashboard',
 });
 
 // Form state
@@ -18,6 +18,8 @@ const email = ref('');
 const password = ref('');
 const loading = ref(false);
 const error = ref<string | null>(null);
+
+const supabase = useSupabase();
 
 async function handleSubmit() {
   if (!email.value || !password.value) {
@@ -29,8 +31,6 @@ async function handleSubmit() {
   error.value = null;
 
   try {
-    const supabase = useSupabase();
-    
     const { data, error: authError } = await supabase.auth.signInWithPassword({
       email: email.value,
       password: password.value,
@@ -55,20 +55,21 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <form @submit.prevent="handleSubmit" class="space-y-4">
+  <form class="space-y-4" @submit.prevent="handleSubmit">
     <!-- Error Alert -->
-    <div v-if="error" class="bg-danger-500/10 text-danger-500 rounded-lg p-3 flex items-start gap-2 text-sm">
-      <AlertCircle class="w-5 h-5 flex-shrink-0 mt-0.5" />
+    <div
+      v-if="error"
+      class="bg-danger-500/10 text-danger-500 flex items-start gap-2 rounded-lg p-3 text-sm"
+    >
+      <AlertCircle class="mt-0.5 h-5 w-5 flex-shrink-0" />
       <span>{{ error }}</span>
     </div>
-    
+
     <!-- Email -->
     <div class="space-y-2">
-      <label for="email" class="block text-sm font-medium text-gray-700">
-        Email
-      </label>
+      <label for="email" class="block text-sm font-medium text-gray-700"> Email </label>
       <div class="relative">
-        <Mail class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Mail class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
         <Input
           id="email"
           v-model="email"
@@ -80,19 +81,17 @@ async function handleSubmit() {
         />
       </div>
     </div>
-    
+
     <!-- Password -->
     <div class="space-y-2">
       <div class="flex items-center justify-between">
-        <label for="password" class="block text-sm font-medium text-gray-700">
-          Password
-        </label>
-        <a href="/forgot-password" class="text-sm text-primary-600 hover:text-primary-700">
+        <label for="password" class="block text-sm font-medium text-gray-700"> Password </label>
+        <a href="/forgot-password" class="text-primary-600 hover:text-primary-700 text-sm">
           Forgot password?
         </a>
       </div>
       <div class="relative">
-        <Lock class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Lock class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
         <Input
           id="password"
           v-model="password"
@@ -104,10 +103,10 @@ async function handleSubmit() {
         />
       </div>
     </div>
-    
+
     <!-- Submit Button -->
     <Button type="submit" class="w-full" :disabled="loading">
-      <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
+      <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
       {{ loading ? 'Logging in...' : 'Log in' }}
     </Button>
   </form>

@@ -11,8 +11,8 @@ let browserClient: ReturnType<typeof createBrowserClient> | null = null;
  * This client automatically handles cookie storage for authentication
  */
 export function getSupabaseBrowserClient(supabaseUrl: string, supabaseAnonKey: string) {
-    if (!browserClient) {
-        browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
-    }
-    return browserClient;
+  if (!browserClient) {
+    browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  }
+  return browserClient;
 }

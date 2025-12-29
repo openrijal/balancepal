@@ -6,7 +6,7 @@ import * as schema from './schema';
 const connectionString = import.meta.env.DATABASE_URL;
 
 if (!connectionString) {
-    throw new Error('DATABASE_URL environment variable is not set');
+  throw new Error('DATABASE_URL environment variable is not set');
 }
 
 // Create postgres client
