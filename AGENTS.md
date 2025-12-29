@@ -14,6 +14,7 @@ This document provides context and guidelines for AI agents (Gemini, Claude, GPT
 |-------|------------|
 | Framework | Astro 5 (SSR mode) |
 | UI Components | Vue 3 (Composition API) |
+| Component Library | **shadcn-vue** (new-york style) |
 | State Management | Pinia |
 | Styling | TailwindCSS v4 |
 | Language | TypeScript (strict mode) |
