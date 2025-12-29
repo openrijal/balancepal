@@ -1,0 +1,67 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import { getUser, createSupabaseServerClient } from "@/lib/auth";
+import ProfileForm from "@/components/auth/ProfileForm.vue";
+
+// Get current user
+const user = await getUser(Astro.cookies);
+
+if (!user) {
+    return Astro.redirect("/login");
+}
+
+// Get profile from database
+const supabase = createSupabaseServerClient(Astro.cookies);
+const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+---
+
+<AppLayout title="Profile - Balance Pal">
+    <div class="p-4 md:p-6 lg:p-8 max-w-2xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
+                Profile
+            </h1>
+            <p class="text-gray-600 mt-1">Manage your account settings</p>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <div class="p-6">
+                <ProfileForm
+                    client:load
+                    initialName={profile?.name ??
+                        user.email?.split("@")[0] ??
+                        ""}
+                    email={user.email ?? ""}
+                    avatarUrl={profile?.profile_picture_url ?? null}
+                />
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div
+            class="mt-8 bg-white rounded-xl border border-danger-500/30 shadow-sm"
+        >
+            <div class="p-6">
+                <h2 class="text-lg font-semibold text-danger-500 mb-2">
+                    Danger Zone
+                </h2>
+                <p class="text-gray-600 text-sm mb-4">
+                    Once you delete your account, there is no going back. Please
+                    be certain.
+                </p>
+                <button
+                    class="btn bg-danger-500/10 text-danger-500 hover:bg-danger-500 hover:text-white transition-colors"
+                    onclick="alert('Account deletion coming soon')"
+                >
+                    Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+</AppLayout>
