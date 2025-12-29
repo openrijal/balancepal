@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
     readonly SUPABASE_URL: string;
     readonly SUPABASE_ANON_KEY: string;
+    readonly DATABASE_URL: string;
     readonly PUBLIC_APP_URL: string;
 }
 
