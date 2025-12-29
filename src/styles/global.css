@@ -2,33 +2,33 @@
 
 /* 
  * Balance Pal - Custom Theme
- * Color Palette:
- * - Cream: #e0d6a9 (backgrounds, accents)
- * - Terracotta: #a8846b (warm accents)
- * - Peach: #f1c0a9 (highlights)
- * - Off-white: #e3d9d2 (light backgrounds)
- * - Teal: #009799 (primary actions)
+ * Color Palette (Pastel):
+ * - Sage: #b3c992 (primary, nature-inspired)
+ * - Sky: #98bfdc (calm, trustworthy)
+ * - Mint: #adebd7 (fresh, light)
+ * - Rose: #f0b1e1 (soft accent)
+ * - Lavender: #baace2 (gentle highlight)
  */
 
 @theme {
-  /* Primary colors */
-  --color-primary-50: oklch(96% 0.02 180);
-  --color-primary-100: oklch(92% 0.04 180);
-  --color-primary-200: oklch(84% 0.08 180);
-  --color-primary-300: oklch(74% 0.12 180);
-  --color-primary-400: oklch(64% 0.14 180);
-  --color-primary-500: #009799;
-  --color-primary-600: oklch(50% 0.12 180);
-  --color-primary-700: oklch(42% 0.10 180);
-  --color-primary-800: oklch(34% 0.08 180);
-  --color-primary-900: oklch(26% 0.06 180);
+  /* Primary colors - based on Sage #b3c992 */
+  --color-primary-50: #f4f7f0;
+  --color-primary-100: #e8efe0;
+  --color-primary-200: #d4e2c5;
+  --color-primary-300: #c3d8ad;
+  --color-primary-400: #b3c992;
+  --color-primary-500: #9ab87a;
+  --color-primary-600: #7fa35e;
+  --color-primary-700: #658a47;
+  --color-primary-800: #4f6d38;
+  --color-primary-900: #3d542c;
 
   /* Accent colors from palette */
-  --color-cream: #e0d6a9;
-  --color-terracotta: #a8846b;
-  --color-peach: #f1c0a9;
-  --color-offwhite: #e3d9d2;
-  --color-teal: #009799;
+  --color-sage: #b3c992;
+  --color-sky: #98bfdc;
+  --color-mint: #adebd7;
+  --color-rose: #f0b1e1;
+  --color-lavender: #baace2;
 
   /* Semantic colors */
   --color-success-500: #22c55e;
@@ -40,7 +40,7 @@
 
   /* Surface colors */
   --color-surface: #ffffff;
-  --color-surface-dim: #f8f6f4;
+  --color-surface-dim: #f8faf6;
   --color-surface-dark: #1a1a1a;
 }
 
@@ -76,7 +76,7 @@
   }
 
   .btn-secondary {
-    @apply bg-cream text-gray-800 hover:bg-terracotta hover:text-white;
+    @apply bg-lavender text-gray-800 hover:bg-rose hover:text-gray-900;
   }
 
   .card {
@@ -84,9 +84,7 @@
   }
 
   .input {
-    @apply w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-surface
-           focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500
-           transition-all duration-200;
+    @apply w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-surface focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all duration-200;
   }
 }
 

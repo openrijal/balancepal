@@ -89,11 +89,11 @@ balancepal/
 
 | Name | Hex | CSS Variable | Usage |
 |------|-----|--------------|-------|
-| Teal | `#009799` | `--color-teal`, `--color-primary-500` | Primary actions |
-| Cream | `#e0d6a9` | `--color-cream` | Backgrounds, accents |
-| Terracotta | `#a8846b` | `--color-terracotta` | Warm accents |
-| Peach | `#f1c0a9` | `--color-peach` | Highlights |
-| Off-white | `#e3d9d2` | `--color-offwhite` | Light backgrounds |
+| Sage | `#b3c992` | `--color-sage`, `--color-primary-400` | Primary actions, logo |
+| Sky | `#98bfdc` | `--color-sky` | Calm accents |
+| Mint | `#adebd7` | `--color-mint` | Fresh backgrounds |
+| Rose | `#f0b1e1` | `--color-rose` | Soft highlights |
+| Lavender | `#baace2` | `--color-lavender` | Gentle accents |
 
 ## Key Files
 
