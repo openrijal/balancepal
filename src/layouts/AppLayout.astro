@@ -1,0 +1,67 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import Sidebar from "@/components/layout/Sidebar.vue";
+
+interface Props {
+    title?: string;
+    description?: string;
+}
+
+const {
+    title = "Dashboard - Balance Pal",
+    description = "Manage your shared expenses",
+} = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+    <div class="min-h-screen bg-surface-dim">
+        <!-- Desktop Layout -->
+        <div class="hidden md:flex">
+            <!-- Sidebar -->
+            <aside
+                class="w-64 h-screen sticky top-0 border-r border-gray-200 bg-white"
+            >
+                <Sidebar client:load />
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 min-h-screen">
+                <slot />
+            </main>
+        </div>
+
+        <!-- Mobile Layout -->
+        <div class="md:hidden flex flex-col min-h-screen">
+            <!-- Top Header -->
+            <header
+                class="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 safe-area-inset-top"
+            >
+                <div class="flex items-center justify-between px-4 h-14">
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="w-8 h-8 bg-sage rounded-lg flex items-center justify-center"
+                        >
+                            <span class="text-white font-bold text-sm">B</span>
+                        </div>
+                        <span class="font-semibold text-gray-900"
+                            >Balance Pal</span
+                        >
+                    </div>
+                    <slot name="header-right" />
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 pb-20">
+                <slot />
+            </main>
+
+            <!-- Bottom Navigation -->
+            <nav
+                class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-gray-200 safe-area-inset-bottom"
+            >
+                <Sidebar client:load mobile={true} />
+            </nav>
+        </div>
+    </div>
+</BaseLayout>
