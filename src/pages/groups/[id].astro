@@ -2,7 +2,9 @@
 import AppLayout from '@/layouts/AppLayout.astro';
 import GroupHeader from '@/components/groups/GroupHeader.vue';
 import { GroupService } from '@/services/groups';
+import { ExpenseService } from '@/services/expenses';
 import { supabase } from '@/lib/supabase';
+import ExpensesContainer from '@/components/expenses/ExpensesContainer.vue';
 
 const { id } = Astro.params;
 
@@ -45,6 +47,8 @@ const isMember = group.members.some((m) => m.user.id === user.id);
 if (!isMember) {
   return Astro.redirect('/groups'); // Or show access denied
 }
+
+const expenses = await ExpenseService.getGroupExpenses(group.id);
 ---
 
 <AppLayout title={group.name}>
@@ -57,12 +61,9 @@ if (!isMember) {
     />
 
     <div class="grid gap-6 md:grid-cols-3">
-      <!-- Main Content (Expenses List Placeholder) -->
+      <!-- Main Content (Expenses List) -->
       <div class="space-y-4 md:col-span-2">
-        <h2 class="text-xl font-semibold">Expenses</h2>
-        <div class="text-muted-foreground rounded-lg border border-dashed p-8 text-center">
-          No expenses yet.
-        </div>
+        <ExpensesContainer client:load groupId={group.id} initialExpenses={expenses} />
       </div>
 
       <!-- Sidebar (Members) -->
