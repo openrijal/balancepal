@@ -19,6 +19,7 @@ This document provides context and guidelines for AI agents (Gemini, Claude, GPT
 | Language | TypeScript (strict mode) |
 | Backend | Supabase (Auth, Database, Storage, Real-time) |
 | Database | PostgreSQL (via Supabase) |
+| **ORM** | **Drizzle ORM** (schema + migrations) |
 | Mobile | Capacitor 6+ |
 | Forms | VeeValidate + Zod |
 | Icons | Lucide Vue |
@@ -65,18 +66,21 @@ balancepal/
 │   │   ├── balances/       # Mix
 │   │   ├── ui/             # Shared components
 │   │   └── layout/         # Mostly Astro
+│   ├── db/
+│   │   ├── schema.ts       # Drizzle schema definitions
+│   │   ├── index.ts        # Drizzle client
+│   │   └── migrations/     # Drizzle migration files
 │   ├── layouts/
 │   │   ├── BaseLayout.astro
 │   │   └── AppLayout.astro
 │   ├── lib/
-│   │   └── supabase.ts     # Supabase client
+│   │   └── supabase.ts     # Supabase client (auth only)
 │   ├── pages/              # Astro pages (SSR)
 │   ├── services/           # API service layer
 │   ├── stores/             # Pinia stores
 │   ├── types/              # TypeScript definitions
 │   └── utils/              # Pure functions
-├── supabase/
-│   └── migrations/         # SQL migrations
+├── drizzle.config.ts       # Drizzle configuration
 ├── public/                 # Static assets
 └── capacitor.config.ts     # Mobile config
 ```
@@ -96,20 +100,29 @@ balancepal/
 | File | Purpose |
 |------|---------|
 | `astro.config.mjs` | Astro + Vue + Tailwind config |
+| `drizzle.config.ts` | Drizzle ORM configuration |
 | `src/app.ts` | Pinia initialization for Vue |
-| `src/lib/supabase.ts` | Supabase client (server & browser) |
-| `src/types/index.ts` | Application TypeScript types |
-| `src/types/database.ts` | Supabase database types |
+| `src/db/schema.ts` | Database schema (Drizzle) |
+| `src/db/index.ts` | Drizzle client instance |
+| `src/lib/supabase.ts` | Supabase client (auth, storage, realtime) |
 | `src/styles/global.css` | TailwindCSS v4 theme |
 
 ## Environment Variables
 
 Required in `.env`:
 ```bash
+# Supabase (Auth, Storage, Realtime)
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_ANON_KEY=xxx
+
+# Database (Drizzle ORM)
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
+
+# App
 PUBLIC_APP_URL=http://localhost:4321
 ```
+
+> Get `DATABASE_URL` from Supabase: **Settings → Database → Connection String → URI**
 
 ## Database Tables
 
@@ -134,6 +147,12 @@ npm run dev           # Start dev server (port 4321)
 # Build & Test
 npm run build         # Production build
 npm run preview       # Preview production build
+
+# Database (Drizzle ORM)
+npm run db:generate   # Generate migrations from schema
+npm run db:migrate    # Apply migrations to database
+npm run db:push       # Push schema directly (dev only)
+npm run db:studio     # Open Drizzle Studio GUI
 
 # Mobile (after Capacitor setup)
 npm run sync          # Sync to native projects
@@ -164,10 +183,11 @@ npx cap open android  # Open Android Studio
 - Use component classes from `global.css` (`.btn`, `.card`, `.input`)
 - Mobile-first responsive design
 
-### Supabase
-- Use typed client from `src/lib/supabase.ts`
-- Server-side: use `supabase` export
-- Client-side: use `createBrowserClient()`
+### Supabase & Database
+- **Auth/Storage/Realtime**: Use Supabase client from `src/lib/supabase.ts`
+- **Database queries**: Use Drizzle from `src/db/index.ts`
+- **Schema changes**: Modify `src/db/schema.ts`, then run `npm run db:generate`
+- **Migrations**: Apply with `npm run db:migrate`
 - Always handle errors and loading states
 
 ## Mobile-First Priority
