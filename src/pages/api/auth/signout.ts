@@ -1,12 +1,13 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '@/lib/supabase';
+import { signOut } from '@/lib/auth';
 
 export const POST: APIRoute = async ({ cookies, redirect }) => {
+    // Use the shared auth helper to sign out and clear correct cookies
+    await signOut(cookies);
+
+    // Also manual cleanup of legacy/manual tokens if they exist, just in case
     cookies.delete('sb-access-token', { path: '/' });
     cookies.delete('sb-refresh-token', { path: '/' });
-
-    // Also sign out from Supabase server-side if needed
-    // But removing cookies is the primary mechanism for our SSR auth
 
     return redirect('/login');
 };

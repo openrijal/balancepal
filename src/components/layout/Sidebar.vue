@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useSupabase } from '@/composables/useSupabase';
+import { getSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { Home, Users, Receipt, Wallet, Bell, User, LogOut, Plus } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 
@@ -31,15 +31,20 @@ const isActive = (href: string) => {
   return currentPath.value === href || currentPath.value.startsWith(href + '/');
 };
 
+
+
+// ... (imports remain)
+
 const handleLogout = async () => {
   try {
-    // 1. Sign out from Supabase (clears client storage)
-    const supabase = useSupabase(); // We need to import useSupabase/createBrowserClient or just rely on global if available.
-    // Better to dynamic import or use composable if inside setup
-    // But we are inside script setup.
+    // 1. Sign out from Supabase (clears cookies via ssr client singleton)
+    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+    const supabase = getSupabaseBrowserClient(supabaseUrl, supabaseAnonKey);
+    
     await supabase.auth.signOut();
 
-    // 2. Sign out from Server (clears cookies)
+    // 2. Sign out from Server (clears manual tokens if any, and redirects)
     await fetch('/api/auth/signout', { method: 'POST' });
     
     window.location.href = '/login';
