@@ -4,6 +4,15 @@ import { getSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { Home, Users, Receipt, Wallet, Bell, User, LogOut, Plus, Tag, UserPlus, Mail } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { toast } from 'vue-sonner';
 
 interface Props {
   mobile?: boolean;
@@ -30,16 +39,27 @@ const props = withDefaults(defineProps<Props>(), {
   mobile: false,
 });
 
-// Current route - will be replaced with actual router later
 // Current route
 const currentPath = computed(() => props.currentPath || (typeof window !== 'undefined' ? window.location.pathname : '/dashboard'));
 
 const groups = ref<Group[]>([]);
 const friends = ref<Friend[]>([]);
+
+// Create Group Dialog
+const createGroupOpen = ref(false);
+const createGroupName = ref('');
+const createGroupDescription = ref('');
+const createGroupLoading = ref(false);
+
+// Invite Friend Dialog
+const inviteFriendOpen = ref(false);
 const inviteEmail = ref('');
+const inviteLoading = ref(false);
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
+  { href: '/groups', label: 'Groups', icon: Users },
+  { href: '/friends', label: 'Friends', icon: User },
   { href: '/activity', label: 'Recent activity', icon: Bell },
   { href: '/expenses', label: 'All expenses', icon: Receipt },
 ];
@@ -69,6 +89,52 @@ onMounted(() => {
 
 const handleLogout = async () => {
   // ... (logout logic remains same)
+};
+
+const handleCreateGroup = async () => {
+  if (!createGroupName.value.trim()) return;
+  
+  createGroupLoading.value = true;
+  try {
+    const response = await fetch('/api/groups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: createGroupName.value,
+        description: createGroupDescription.value,
+      }),
+    });
+
+    if (!response.ok) throw new Error('Failed to create group');
+
+    const data = await response.json();
+    toast.success('Group created successfully!');
+    
+    createGroupName.value = '';
+    createGroupDescription.value = '';
+    createGroupOpen.value = false;
+    
+    window.location.href = `/groups/${data.id}`;
+  } catch (error) {
+    console.error(error);
+    toast.error('Failed to create group');
+  } finally {
+    createGroupLoading.value = false;
+  }
+};
+
+const handleInviteFriend = async () => {
+  if (!inviteEmail.value.trim()) return;
+  
+  inviteLoading.value = true;
+  try {
+    // For now, just show a toast - actual invitation logic would require selecting a group
+    toast.info('To invite a friend, go to a group and invite them from there.');
+    inviteEmail.value = '';
+    inviteFriendOpen.value = false;
+  } finally {
+    inviteLoading.value = false;
+  }
 };
 </script>
 
@@ -121,7 +187,10 @@ const handleLogout = async () => {
     <div class="px-2 mb-6">
       <div class="flex items-center justify-between px-3 py-1 mb-1">
         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Groups</span>
-        <button class="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-gray-100 transition-colors">
+        <button 
+          @click="createGroupOpen = true"
+          class="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-gray-100 transition-colors"
+        >
           <Plus class="h-3 w-3" />
         </button>
       </div>
@@ -144,7 +213,10 @@ const handleLogout = async () => {
     <div class="px-2 mb-6">
       <div class="flex items-center justify-between px-3 py-1 mb-1">
         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Friends</span>
-        <button class="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-gray-100 transition-colors">
+        <button 
+          @click="inviteFriendOpen = true"
+          class="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-gray-100 transition-colors"
+        >
           <Plus class="h-3 w-3" />
         </button>
       </div>
@@ -162,29 +234,8 @@ const handleLogout = async () => {
       </div>
     </div>
 
-    <!-- Invite Friends Footer Block -->
-    <div class="mt-auto border-t border-gray-100 p-4 bg-gray-50/50">
-      <h3 class="text-[11px] font-bold text-gray-900 mb-2 uppercase tracking-wide flex items-center gap-2">
-        <UserPlus class="h-3.5 w-3.5 text-primary-600" />
-        Invite friends
-      </h3>
-      <div class="space-y-2">
-        <div class="relative">
-          <Mail class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
-          <Input 
-            v-model="inviteEmail" 
-            placeholder="Enter an email address" 
-            class="h-8 pl-9 text-xs border-gray-200 focus:ring-primary-100"
-          />
-        </div>
-        <Button class="w-full h-8 text-xs font-semibold py-0" size="sm" variant="outline">
-          Send invite
-        </Button>
-      </div>
-    </div>
-
     <!-- Profile & Logout -->
-    <div class="border-t border-gray-100 px-2 py-2">
+    <div class="mt-auto border-t border-gray-100 px-2 py-2">
       <a
         href="/profile"
         class="flex items-center gap-3 rounded px-3 py-1.5 text-[13px] text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors"
@@ -201,6 +252,61 @@ const handleLogout = async () => {
       </button>
     </div>
   </div>
+
+  <!-- Create Group Dialog -->
+  <Dialog v-model:open="createGroupOpen">
+    <DialogContent class="sm:max-w-[425px]">
+      <DialogHeader>
+        <DialogTitle>Create Group</DialogTitle>
+        <DialogDescription>
+          Create a new group to split expenses with friends.
+        </DialogDescription>
+      </DialogHeader>
+      
+      <form @submit.prevent="handleCreateGroup" class="grid gap-4 py-4">
+        <div class="grid gap-2">
+          <label for="group-name" class="text-sm font-medium">Name</label>
+          <Input id="group-name" v-model="createGroupName" placeholder="Paris Trip 2024" />
+        </div>
+        
+        <div class="grid gap-2">
+          <label for="group-description" class="text-sm font-medium">Description (Optional)</label>
+          <Input id="group-description" v-model="createGroupDescription" placeholder="Expenses for our trip..." />
+        </div>
+
+        <DialogFooter>
+          <Button type="submit" :disabled="createGroupLoading || !createGroupName.trim()">
+            {{ createGroupLoading ? 'Creating...' : 'Create Group' }}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  </Dialog>
+
+  <!-- Invite Friend Dialog -->
+  <Dialog v-model:open="inviteFriendOpen">
+    <DialogContent class="sm:max-w-[425px]">
+      <DialogHeader>
+        <DialogTitle>Invite a Friend</DialogTitle>
+        <DialogDescription>
+          Enter an email address to invite someone to Balance Pal.
+        </DialogDescription>
+      </DialogHeader>
+      
+      <form @submit.prevent="handleInviteFriend" class="grid gap-4 py-4">
+        <div class="grid gap-2">
+          <label for="invite-email" class="text-sm font-medium">Email Address</label>
+          <Input id="invite-email" v-model="inviteEmail" type="email" placeholder="friend@example.com" />
+        </div>
+
+        <DialogFooter>
+          <Button type="submit" :disabled="inviteLoading || !inviteEmail.trim()">
+            {{ inviteLoading ? 'Sending...' : 'Send Invite' }}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <style scoped>

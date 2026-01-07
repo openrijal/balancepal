@@ -43,7 +43,93 @@ export interface SharedExpense {
     friendSplit?: string;
 }
 
+export interface FriendListItem {
+    id: string;
+    name: string;
+    email: string;
+    profilePictureUrl: string | null;
+    sharedGroupCount: number;
+    netBalance: number;
+}
+
 export class FriendsService {
+    /**
+     * Get all friends for a user (users who share at least one group)
+     */
+    static async getAllFriends(userId: string): Promise<FriendListItem[]> {
+        // 1. Get all groups user is in
+        const userMemberships = await db.query.groupMembers.findMany({
+            where: eq(groupMembers.userId, userId),
+        });
+        const userGroupIds = userMemberships.map(m => m.groupId);
+
+        if (userGroupIds.length === 0) {
+            return [];
+        }
+
+        // 2. Get all members of those groups except current user
+        const allMembers = await db.query.groupMembers.findMany({
+            where: inArray(groupMembers.groupId, userGroupIds),
+            with: {
+                user: true,
+            },
+        });
+
+        // 3. Build friend map with shared group counts
+        const friendMap = new Map<string, {
+            user: typeof allMembers[0]['user'];
+            sharedGroupIds: Set<string>;
+        }>();
+
+        for (const member of allMembers) {
+            if (member.userId === userId) continue;
+
+            if (!friendMap.has(member.userId)) {
+                friendMap.set(member.userId, {
+                    user: member.user,
+                    sharedGroupIds: new Set([member.groupId]),
+                });
+            } else {
+                friendMap.get(member.userId)!.sharedGroupIds.add(member.groupId);
+            }
+        }
+
+        // 4. Calculate net balance for each friend
+        const friends: FriendListItem[] = [];
+
+        for (const [friendId, data] of friendMap) {
+            let netBalance = 0;
+
+            // Calculate balance across all shared groups
+            for (const groupId of data.sharedGroupIds) {
+                try {
+                    const debts = await BalanceService.getGroupBalances(groupId);
+                    for (const debt of debts) {
+                        if (debt.fromUserId === userId && debt.toUserId === friendId) {
+                            netBalance -= debt.amount;
+                        } else if (debt.fromUserId === friendId && debt.toUserId === userId) {
+                            netBalance += debt.amount;
+                        }
+                    }
+                } catch {
+                    // Skip if balance calculation fails
+                }
+            }
+
+            friends.push({
+                id: data.user.id,
+                name: data.user.name,
+                email: data.user.email,
+                profilePictureUrl: data.user.profilePictureUrl,
+                sharedGroupCount: data.sharedGroupIds.size,
+                netBalance,
+            });
+        }
+
+        // Sort by name
+        return friends.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
     /**
      * Get shared group IDs between two users
      */

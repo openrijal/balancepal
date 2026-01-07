@@ -1,0 +1,136 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import { FriendsService } from '@/services/friends';
+import { supabase } from '@/lib/supabase';
+
+const accessToken = Astro.cookies.get('sb-access-token')?.value;
+const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
+
+if (!accessToken || !refreshToken) {
+  return Astro.redirect('/login');
+}
+
+// Set session with tokens to enable proper auth and token refresh
+const {
+  data: { user },
+  error,
+} = await supabase.auth.setSession({
+  access_token: accessToken,
+  refresh_token: refreshToken,
+});
+
+if (error || !user) {
+  return Astro.redirect('/login');
+}
+
+const friends = await FriendsService.getAllFriends(user.id);
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(Math.abs(amount));
+};
+
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+---
+
+<AppLayout title="My Friends">
+  <div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+      <h1 class="text-foreground text-3xl font-bold tracking-tight">My Friends</h1>
+      <p class="text-muted-foreground mt-1">People you share expenses with.</p>
+    </div>
+
+    {
+      friends.length === 0 ? (
+        <div class="bg-muted/30 border-muted-foreground/25 rounded-lg border border-dashed py-12 text-center">
+          <div class="space-y-3">
+            <h3 class="text-lg font-medium">No friends yet</h3>
+            <p class="text-muted-foreground mx-auto max-w-sm">
+              Friends are people you share groups with. Create or join a group to start connecting!
+            </p>
+            <a
+              href="/groups"
+              class="bg-primary-500 hover:bg-primary-600 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
+            >
+              Go to Groups
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {friends.map((friend) => (
+            <a
+              href={`/friends/${friend.id}`}
+              class="group bg-card hover:border-primary/50 relative flex items-center gap-4 rounded-xl border p-4 shadow-sm transition-all hover:shadow-md"
+            >
+              {/* Avatar */}
+              <div class="flex-shrink-0">
+                {friend.profilePictureUrl ? (
+                  <img
+                    src={friend.profilePictureUrl}
+                    alt={friend.name}
+                    class="ring-primary-100 h-12 w-12 rounded-full object-cover ring-2"
+                  />
+                ) : (
+                  <div class="bg-primary-100 text-primary-700 ring-primary-50 flex h-12 w-12 items-center justify-center rounded-full font-semibold ring-2">
+                    {getInitials(friend.name)}
+                  </div>
+                )}
+              </div>
+
+              {/* Info */}
+              <div class="min-w-0 flex-1">
+                <h3 class="group-hover:text-primary truncate font-semibold text-gray-900 transition-colors">
+                  {friend.name}
+                </h3>
+                <p class="text-muted-foreground truncate text-sm">{friend.email}</p>
+                <div class="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
+                  <span class="flex items-center gap-1">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    {friend.sharedGroupCount} {friend.sharedGroupCount === 1 ? 'group' : 'groups'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Balance */}
+              <div class="flex-shrink-0 text-right">
+                {friend.netBalance !== 0 ? (
+                  <div
+                    class:list={[
+                      'font-semibold',
+                      friend.netBalance > 0 ? 'text-green-600' : 'text-red-600',
+                    ]}
+                  >
+                    {friend.netBalance > 0 ? '+' : '-'}
+                    {formatCurrency(friend.netBalance)}
+                  </div>
+                ) : (
+                  <div class="text-muted-foreground text-sm">Settled</div>
+                )}
+                <div class="text-muted-foreground mt-0.5 text-xs">
+                  {friend.netBalance > 0 ? 'owes you' : friend.netBalance < 0 ? 'you owe' : ''}
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</AppLayout>
