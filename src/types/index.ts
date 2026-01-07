@@ -207,3 +207,41 @@ export interface RecordSettlementForm {
   reference?: string;
   proofImage?: File;
 }
+
+// ============================================
+// Friend Types
+// ============================================
+
+export interface FriendDetails {
+  id: string;
+  name: string;
+  email: string;
+  profilePictureUrl?: string;
+  sharedGroups: { id: string; name: string; description?: string }[];
+}
+
+export interface FriendBalanceBreakdown {
+  groupId: string;
+  groupName: string;
+  amount: number;
+}
+
+export interface FriendBalance {
+  friendId: string;
+  netBalance: number;
+  breakdown: FriendBalanceBreakdown[];
+}
+
+export interface SharedExpense {
+  id: string;
+  description: string;
+  amount: string;
+  date: string;
+  groupId: string;
+  groupName: string;
+  paidByUserId: string;
+  paidByName: string;
+  category: ExpenseCategory;
+  userSplit?: string;
+  friendSplit?: string;
+}

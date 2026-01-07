@@ -1,0 +1,86 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import FriendHeader from '@/components/friends/FriendHeader.vue';
+import FriendBalanceSummary from '@/components/friends/FriendBalanceSummary.vue';
+import SharedGroups from '@/components/friends/SharedGroups.vue';
+import SharedExpenses from '@/components/friends/SharedExpenses.vue';
+import { FriendsService } from '@/services/friends';
+import { supabase } from '@/lib/supabase';
+
+const { id } = Astro.params;
+
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+if (!id || !uuidRegex.test(id)) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
+const accessToken = Astro.cookies.get('sb-access-token')?.value;
+const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
+
+if (!accessToken || !refreshToken) {
+  return Astro.redirect('/login');
+}
+
+const {
+  data: { user },
+  error,
+} = await supabase.auth.getUser(accessToken);
+
+if (error || !user) {
+  return Astro.redirect('/login');
+}
+
+const friend = await FriendsService.getFriendDetails(user.id, id);
+
+if (!friend) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
+// Initial data fetching for SSR
+const balance = await FriendsService.getFriendBalance(user.id, id);
+---
+
+<AppLayout title={friend.name}>
+  <div class="container mx-auto px-4 py-8">
+    <FriendHeader
+      client:load
+      friendId={friend.id}
+      name={friend.name}
+      email={friend.email}
+      profilePictureUrl={friend.profilePictureUrl}
+    />
+
+    <div class="mt-6 grid gap-6 md:grid-cols-3">
+      <!-- Main Content (Expense History) -->
+      <div class="space-y-4 md:col-span-2">
+        <SharedExpenses
+          client:load
+          friendId={friend.id}
+          friendName={friend.name}
+          currentUserId={user.id}
+        />
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <!-- Balance Summary -->
+        <FriendBalanceSummary
+          client:load
+          friendId={friend.id}
+          friendName={friend.name}
+          initialBalance={balance}
+        />
+
+        <!-- Shared Groups -->
+        <SharedGroups client:load groups={friend.sharedGroups} />
+      </div>
+    </div>
+  </div>
+</AppLayout>
