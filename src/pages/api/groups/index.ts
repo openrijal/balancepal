@@ -40,12 +40,17 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 export const GET: APIRoute = async ({ cookies }) => {
     try {
         const accessToken = cookies.get('sb-access-token')?.value;
+        const refreshToken = cookies.get('sb-refresh-token')?.value;
 
-        if (!accessToken) {
+        if (!accessToken || !refreshToken) {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
         }
 
-        const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+        // Set session with tokens to enable proper auth
+        const { data: { user }, error: authError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+        });
 
         if (authError || !user) {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });

@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.astro';
 import CreateGroupForm from '@/components/groups/CreateGroupForm.vue';
 import { GroupService } from '@/services/groups';
+import { BalanceService } from '@/services/balances';
 import { supabase } from '@/lib/supabase';
 
 const accessToken = Astro.cookies.get('sb-access-token')?.value;
@@ -11,16 +12,47 @@ if (!accessToken || !refreshToken) {
   return Astro.redirect('/login');
 }
 
+// Set session with tokens to enable proper auth and token refresh
 const {
   data: { user },
   error,
-} = await supabase.auth.getUser(accessToken);
+} = await supabase.auth.setSession({
+  access_token: accessToken,
+  refresh_token: refreshToken,
+});
 
 if (error || !user) {
   return Astro.redirect('/login');
 }
 
 const groups = await GroupService.getUserGroups(user.id);
+
+// Fetch balance info for each group
+const groupsWithBalances = await Promise.all(
+  groups.map(async (group) => {
+    try {
+      const stats = await BalanceService.getGroupStats(group.id, user.id);
+      return {
+        ...group,
+        userBalance: stats.userBalance,
+        totalExpenses: stats.totalExpenses,
+      };
+    } catch {
+      return {
+        ...group,
+        userBalance: 0,
+        totalExpenses: 0,
+      };
+    }
+  })
+);
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount);
+};
 ---
 
 <AppLayout title="My Groups">
@@ -34,7 +66,7 @@ const groups = await GroupService.getUserGroups(user.id);
     </div>
 
     {
-      groups.length === 0 ? (
+      groupsWithBalances.length === 0 ? (
         <div class="bg-muted/30 border-muted-foreground/25 rounded-lg border border-dashed py-12 text-center">
           <div class="space-y-3">
             <h3 class="text-lg font-medium">No groups yet</h3>
@@ -45,7 +77,7 @@ const groups = await GroupService.getUserGroups(user.id);
         </div>
       ) : (
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {groups.map((group) => (
+          {groupsWithBalances.map((group) => (
             <a
               href={`/groups/${group.id}`}
               class="group bg-card hover:border-primary/50 relative flex flex-col justify-between space-y-4 rounded-xl border p-6 shadow-sm transition-all hover:shadow-md"
@@ -56,6 +88,34 @@ const groups = await GroupService.getUserGroups(user.id);
                 </h3>
                 {group.description && (
                   <p class="text-muted-foreground line-clamp-2 text-sm">{group.description}</p>
+                )}
+              </div>
+
+              <!-- Quick Info -->
+              <div class="flex items-center gap-4 text-sm">
+                <div class="flex items-center gap-1 text-muted-foreground">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                  </svg>
+                  <span>{group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}</span>
+                </div>
+                
+                {group.userBalance !== 0 && (
+                  <div class:list={[
+                    "flex items-center gap-1 font-medium",
+                    group.userBalance > 0 ? "text-green-600" : "text-red-600"
+                  ]}>
+                    {group.userBalance > 0 ? (
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                      </svg>
+                    ) : (
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                      </svg>
+                    )}
+                    <span>{group.userBalance > 0 ? '+' : ''}{formatCurrency(group.userBalance)}</span>
+                  </div>
                 )}
               </div>
 

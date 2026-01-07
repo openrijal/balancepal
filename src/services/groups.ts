@@ -46,12 +46,19 @@ export class GroupService {
         const memberships = await db.query.groupMembers.findMany({
             where: eq(groupMembers.userId, userId),
             with: {
-                group: true,
+                group: {
+                    with: {
+                        members: true,
+                    }
+                },
             },
             orderBy: (groupMembers) => desc(groupMembers.joinedAt),
         });
 
-        return memberships.map((m) => m.group);
+        return memberships.map((m) => ({
+            ...m.group,
+            memberCount: m.group.members?.length || 0,
+        }));
     }
 
     static async getGroupDetails(groupId: string) {
