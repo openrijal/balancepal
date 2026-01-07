@@ -30,10 +30,8 @@ async function refreshExpenses() {
         const res = await fetch(`/api/groups/${props.groupId}/expenses`);
         if (res.ok) {
             expenses.value = await res.json();
-            // Dispatch custom event for other islands to listen
-            window.dispatchEvent(new CustomEvent('balancepal:expenses-changed', {
-                detail: { groupId: props.groupId }
-            }));
+            // Refresh group stats via the shared Pinia store
+            groupsStore.fetchGroupStats(props.groupId);
         }
     } catch (e) {
         console.error('Failed to refresh expenses', e);

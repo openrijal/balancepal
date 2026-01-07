@@ -1,5 +1,5 @@
 import type { App } from 'vue';
-import { createPinia } from 'pinia';
+import { pinia } from '@/stores';
 import { getSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { supabaseKey } from '@/types/injection-keys';
 
@@ -8,7 +8,7 @@ import { supabaseKey } from '@/types/injection-keys';
  * This file is loaded by @astrojs/vue for each island
  */
 export default (app: App) => {
-  const pinia = createPinia();
+  // Use the singleton Pinia instance
   app.use(pinia);
 
   // Initialize Supabase Client

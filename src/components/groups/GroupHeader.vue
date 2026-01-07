@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Settings, UserPlus, Users, LogOut, Trash2 } from 'lucide-vue-next';
 import InviteMemberDialog from './InviteMemberDialog.vue';
@@ -50,20 +50,8 @@ const balancePrefix = computed(() => {
   return '';
 });
 
-function handleExpensesChanged(event: Event) {
-  const customEvent = event as CustomEvent;
-  if (customEvent.detail?.groupId === props.groupId) {
-    groupsStore.fetchGroupStats(props.groupId);
-  }
-}
-
 onMounted(() => {
   groupsStore.fetchGroupStats(props.groupId);
-  window.addEventListener('balancepal:expenses-changed', handleExpensesChanged);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('balancepal:expenses-changed', handleExpensesChanged);
 });
 </script>
 

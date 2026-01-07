@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { ArrowRight, CheckCircle2 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import SettleUpDialog from './SettleUpDialog.vue';
+import { useGroupsStore } from '@/stores/groupsStore';
 
 interface Debt {
     fromUserId: string;
@@ -17,15 +18,14 @@ const props = defineProps<{
     currentUserId: string;
 }>();
 
+const groupsStore = useGroupsStore();
 const balances = ref<Debt[]>([]);
 const loading = ref(true);
 
-function handleExpensesChanged(event: Event) {
-  const customEvent = event as CustomEvent;
-  if (customEvent.detail?.groupId === props.groupId) {
+// Watch for group stats updates to refresh balances via shared Pinia store
+watch(() => groupsStore.currentGroup?.totalExpenses, () => {
     fetchBalances();
-  }
-}
+});
 
 // Settle Up State
 const showSettleUp = ref(false);
@@ -61,11 +61,6 @@ const openSettleUp = (debt: Debt) => {
 
 onMounted(() => {
     fetchBalances();
-    window.addEventListener('balancepal:expenses-changed', handleExpensesChanged);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('balancepal:expenses-changed', handleExpensesChanged);
 });
 
 const myDebts = computed(() => balances.value.filter(d => d.fromUserId === props.currentUserId));
