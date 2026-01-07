@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { getSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { Home, Users, Receipt, Wallet, Bell, User, LogOut, Plus, Tag, UserPlus, Mail } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 
 interface Props {
   mobile?: boolean;
+  currentPath?: string;
 }
 
 interface Group {
@@ -30,7 +31,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 // Current route - will be replaced with actual router later
-const currentPath = ref(typeof window !== 'undefined' ? window.location.pathname : '/dashboard');
+// Current route
+const currentPath = computed(() => props.currentPath || (typeof window !== 'undefined' ? window.location.pathname : '/dashboard'));
 
 const groups = ref<Group[]>([]);
 const friends = ref<Friend[]>([]);
