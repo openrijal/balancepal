@@ -89,7 +89,7 @@ const getExpenseDebtContext = (activity: Activity) => {
     return {
       label: isPayer ? 'you paid' : 'you received',
       amount: formatCurrency(activity.amount),
-      class: isPayer ? 'text-gray-500' : 'text-emerald-600'
+      class: isPayer ? 'text-orange-600' : 'text-emerald-600'
     };
   }
 
@@ -101,7 +101,7 @@ const getExpenseDebtContext = (activity: Activity) => {
     const othersOwe = Number(activity.amount) - userAmount;
     return othersOwe > 0 
       ? { label: 'you lent', amount: formatCurrency(othersOwe), class: 'text-emerald-600' }
-      : { label: 'you paid', amount: formatCurrency(activity.amount), class: 'text-gray-500' };
+      : { label: 'you paid', amount: formatCurrency(userAmount), class: 'text-gray-500' };
   } else {
     return userAmount > 0 
       ? { label: `${activity.paidBy?.name.split(' ')[0]} lent you`, amount: formatCurrency(userAmount), class: 'text-orange-600' }
@@ -124,15 +124,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="space-y-8 max-w-4xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">All expenses</h1>
-      <div class="flex gap-2">
-        <button class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-orange-700 transition-colors">Add an expense</button>
-        <button class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-emerald-700 transition-colors">Settle up</button>
-      </div>
-    </div>
-
+  <div class="space-y-6">
     <div v-if="loading" class="space-y-4">
       <div v-for="i in 3" :key="i" class="h-20 bg-gray-100 animate-pulse rounded-xl"></div>
     </div>
@@ -143,7 +135,7 @@ onMounted(async () => {
     </div>
 
     <div v-else v-for="group in groupedActivities" :key="group.monthYear" class="space-y-4">
-      <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 bg-gray-50/50 py-1 px-3 rounded-md inline-block">
+      <h3 class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2 px-1">
         {{ group.monthYear }}
       </h3>
       
@@ -151,7 +143,7 @@ onMounted(async () => {
         <div 
           v-for="activity in group.items" 
           :key="activity.id"
-          class="group flex items-center justify-between p-4 transition-colors hover:bg-gray-50/80"
+          class="group flex items-center justify-between p-4 transition-colors hover:bg-gray-50/50"
         >
           <div class="flex items-center gap-4 flex-1 min-w-0">
             <!-- Date Box -->
@@ -162,7 +154,7 @@ onMounted(async () => {
 
             <!-- Icon -->
             <div :class="['flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-all', 
-              activity.type === 'settlement' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-gray-50 border-transparent text-gray-400 group-hover:bg-white group-hover:border-gray-100']">
+              activity.type === 'settlement' ? 'bg-orange-50 border-orange-100 text-orange-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600']">
               <component :is="getCategoryIcon(activity)" class="h-5 w-5" />
             </div>
 

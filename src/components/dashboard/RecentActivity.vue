@@ -77,9 +77,9 @@ onMounted(fetchActivity);
 </script>
 
 <template>
-  <div class="rounded-xl border border-gray-100 bg-white shadow-sm flex flex-col h-[600px]">
-    <div class="border-b border-gray-100 p-4 shrink-0">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500">Recent Activity</h2>
+  <div class="rounded-xl border border-gray-100 bg-white shadow-sm flex flex-col">
+    <div class="p-4 border-b border-gray-50">
+      <h2 class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Activity Feed</h2>
     </div>
     
     <!-- Loading -->
