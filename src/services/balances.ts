@@ -96,6 +96,31 @@ export class BalanceService {
         return results;
     }
 
+    static async getGroupMemberBalances(groupId: string) {
+        const debts = await this.getGroupBalances(groupId);
+        const members = await db.query.groupMembers.findMany({
+            where: eq(groupMembers.groupId, groupId),
+            with: { user: true }
+        });
+
+        const balances = new Map<string, number>();
+        members.forEach(m => balances.set(m.userId, 0));
+
+        debts.forEach(debt => {
+            // fromUser owes toUser.
+            // toUser gets back. fromUser owes.
+            balances.set(debt.toUserId, (balances.get(debt.toUserId) || 0) + debt.amount);
+            balances.set(debt.fromUserId, (balances.get(debt.fromUserId) || 0) - debt.amount);
+        });
+
+        return members.map(m => ({
+            userId: m.userId,
+            name: m.user.name,
+            balance: balances.get(m.userId) || 0,
+            role: m.role
+        }));
+    }
+
     static async getGroupStats(groupId: string, userId: string) {
         const groupExpenses = await ExpenseService.getGroupExpenses(groupId);
         const balances = await this.getGroupBalances(groupId);

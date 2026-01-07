@@ -12,14 +12,20 @@ interface Expense {
   amount: number | string;
   date: string;
   paidBy: {
+    id: string;
     name: string;
   };
+  splits: {
+    userId: string;
+    amount: number | string;
+  }[];
 }
 
 const props = defineProps<{
   groupId: string;
   initialExpenses: Expense[];
   memberCount: number;
+  currentUserId: string;
 }>();
 
 const expenses = ref<Expense[]>(props.initialExpenses);
@@ -49,6 +55,6 @@ async function refreshExpenses() {
         <CreateExpenseDialog v-else :groupId="groupId" @expense-created="refreshExpenses" />
     </div>
 
-    <ExpenseList :expenses="expenses" />
+    <ExpenseList :expenses="expenses" :current-user-id="currentUserId" />
   </div>
 </template>

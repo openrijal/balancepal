@@ -5,7 +5,7 @@ import { GroupService } from '@/services/groups';
 import { ExpenseService } from '@/services/expenses';
 import { supabase } from '@/lib/supabase';
 import ExpensesContainer from '@/components/expenses/ExpensesContainer.vue';
-import BalanceList from '@/components/balances/BalanceList.vue';
+import GroupMemberBalances from '@/components/groups/GroupMemberBalances.vue';
 import InviteMemberDialog from '@/components/groups/InviteMemberDialog.vue';
 
 const { id } = Astro.params;
@@ -72,13 +72,14 @@ const expenses = await ExpenseService.getGroupExpenses(group.id);
           groupId={group.id}
           initialExpenses={expenses}
           memberCount={group.members.length}
+          currentUserId={user.id}
         />
       </div>
 
       <!-- Sidebar (Balances) -->
       <div class="space-y-6">
-        <!-- Balances Section -->
-        <BalanceList client:load groupId={group.id} currentUserId={user.id} />
+        <!-- New Group Member Balances Sidebar -->
+        <GroupMemberBalances client:load groupId={group.id} currentUserId={user.id} />
       </div>
     </div>
   </div>

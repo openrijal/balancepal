@@ -1,27 +1,51 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { User, Receipt } from 'lucide-vue-next';
+import { 
+  User, 
+  Receipt, 
+  Utensils, 
+  Car, 
+  Gamepad2, 
+  Lightbulb, 
+  ShoppingBag, 
+  MoreHorizontal,
+  Camera
+} from 'lucide-vue-next';
 
-// Define strict types or use any for now if types are complex to share
 interface Expense {
   id: string;
   description: string;
   amount: number | string;
   date: string;
+  category: string;
   paidBy: {
+    id: string;
     name: string;
   };
+  splits: {
+    userId: string;
+    amount: number | string;
+  }[];
 }
 
 const props = defineProps<{
   expenses: Expense[];
+  currentUserId: string;
 }>();
 
-const formatDate = (dateString: string) => {
+const formatMonthYear = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   });
+};
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return {
+    month: date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
+    day: date.getDate(),
+  };
 };
 
 const formatCurrency = (amount: number | string) => {
@@ -30,43 +54,128 @@ const formatCurrency = (amount: number | string) => {
     currency: 'USD',
   }).format(Number(amount));
 };
+
+const getCategoryIcon = (category: string) => {
+  switch (category) {
+    case 'food': return Utensils;
+    case 'transport': return Car;
+    case 'entertainment': return Gamepad2;
+    case 'utilities': return Lightbulb;
+    case 'shopping': return ShoppingBag;
+    default: return Receipt;
+  }
+};
+
+// Group expenses by Month Year
+const groupedExpenses = computed(() => {
+  const groups: Record<string, Expense[]> = {};
+  
+  props.expenses.forEach(expense => {
+    const key = formatMonthYear(expense.date);
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(expense);
+  });
+  
+  return Object.entries(groups).map(([monthYear, items]) => ({
+    monthYear,
+    items
+  }));
+});
+
+// Calculate what current user owes or is owed for an expense
+const getExpenseContext = (expense: Expense) => {
+  const isPayer = expense.paidBy.id === props.currentUserId;
+  const userSplit = expense.splits.find(s => s.userId === props.currentUserId);
+  const userAmount = userSplit ? Number(userSplit.amount) : 0;
+  
+  if (isPayer) {
+    const othersOwe = Number(expense.amount) - userAmount;
+    if (othersOwe > 0) {
+      return {
+        label: `you lent`,
+        amount: formatCurrency(othersOwe),
+        class: 'text-emerald-600'
+      };
+    }
+    return {
+      label: 'you paid',
+      amount: formatCurrency(expense.amount),
+      class: 'text-gray-500'
+    };
+  } else {
+    if (userAmount > 0) {
+      return {
+        label: `${expense.paidBy.name.split(' ')[0]} lent you`,
+        amount: formatCurrency(userAmount),
+        class: 'text-orange-600'
+      };
+    }
+    return {
+      label: 'not involved',
+      amount: '',
+      class: 'text-gray-400'
+    };
+  }
+};
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-8">
     <div v-if="expenses.length === 0" class="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
       <Receipt class="mx-auto h-8 w-8 opacity-50 mb-2" />
       No expenses yet. Add one to get started!
     </div>
 
-    <div v-else class="space-y-3">
+    <div v-else v-for="group in groupedExpenses" :key="group.monthYear" class="space-y-4">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100 pb-2">
+        {{ group.monthYear }}
+      </h3>
+      
+      <div class="divide-y divide-gray-50 overflow-hidden rounded-xl border bg-white shadow-sm">
         <div 
-            v-for="expense in expenses" 
-            :key="expense.id"
-            class="bg-card flex items-center justify-between rounded-lg border p-4 shadow-sm transition-colors hover:bg-gray-50"
+          v-for="expense in group.items" 
+          :key="expense.id"
+          class="group flex items-center justify-between p-4 transition-colors hover:bg-gray-50"
         >
-            <div class="flex items-center gap-4">
-                <!-- Date Box -->
-                <div class="bg-muted flex h-12 w-12 flex-col items-center justify-center rounded-lg text-xs font-medium">
-                    <span class="text-xs uppercase">{{ formatDate(expense.date).split(' ')[0] }}</span>
-                    <span class="text-lg font-bold">{{ formatDate(expense.date).split(' ')[1] }}</span>
-                </div>
-
-                <div>
-                    <h4 class="font-medium text-gray-900">{{ expense.description }}</h4>
-                    <p class="text-muted-foreground text-xs">
-                        Paid by <span class="font-medium text-gray-700">{{ expense.paidBy?.name || 'Unknown' }}</span>
-                    </p>
-                </div>
+          <div class="flex items-center gap-4">
+            <!-- Date Box -->
+            <div class="flex flex-col items-center justify-center text-center w-10">
+              <span class="text-[10px] font-bold text-gray-400">{{ formatDate(expense.date).month }}</span>
+              <span class="text-xl font-medium text-gray-600 leading-none">{{ formatDate(expense.date).day }}</span>
             </div>
 
-            <div class="text-right">
-                <span class="block font-bold text-gray-900">
-                    {{ formatCurrency(expense.amount) }}
-                </span>
-                <!-- Maybe show "you borrowed" or "you lent" details later -->
+            <!-- Icon -->
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 text-gray-400 group-hover:bg-white group-hover:shadow-sm transition-all border border-transparent group-hover:border-gray-100">
+              <component :is="getCategoryIcon(expense.category)" class="h-5 w-5" />
             </div>
+
+            <div>
+              <h4 class="font-medium text-gray-900">{{ expense.description }}</h4>
+              <p class="text-xs text-gray-500">
+                <span v-if="expense.paidBy.id === currentUserId">You</span>
+                <span v-else>{{ expense.paidBy.name }}</span>
+                paid <span class="font-semibold text-gray-700">{{ formatCurrency(expense.amount) }}</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="text-right">
+            <template v-if="getExpenseContext(expense).amount">
+              <p class="text-[10px] font-bold uppercase tracking-tight text-gray-400 leading-tight">
+                {{ getExpenseContext(expense).label }}
+              </p>
+              <p :class="['text-sm font-bold', getExpenseContext(expense).class]">
+                {{ getExpenseContext(expense).amount }}
+              </p>
+            </template>
+            <template v-else>
+                <p class="text-xs italic text-gray-300">not involved</p>
+            </template>
+          </div>
         </div>
+      </div>
     </div>
   </div>
 </template>

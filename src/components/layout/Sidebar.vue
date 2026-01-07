@@ -23,8 +23,7 @@ const currentPath = ref(typeof window !== 'undefined' ? window.location.pathname
 const navItems = [
   { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/groups', label: 'Groups', icon: Users },
-  { href: '/expenses', label: 'Expenses', icon: Receipt },
-  { href: '/balances', label: 'Balances', icon: Wallet },
+  { href: '/expenses', label: 'All expenses', icon: Receipt },
 ];
 
 const isActive = (href: string) => {
@@ -69,15 +68,6 @@ const handleLogout = async () => {
       <span class="text-xs font-medium">{{ item.label }}</span>
     </a>
 
-    <!-- Add Button (FAB style in nav) -->
-    <button
-      class="flex flex-1 flex-col items-center justify-center py-2"
-      @click="$emit('add-expense')"
-    >
-      <div class="bg-primary-500 flex h-10 w-10 items-center justify-center rounded-full shadow-md">
-        <Plus class="h-5 w-5 text-white" />
-      </div>
-    </button>
   </div>
 
   <!-- Desktop Sidebar -->
@@ -92,13 +82,6 @@ const handleLogout = async () => {
       </a>
     </div>
 
-    <!-- Add Expense Button -->
-    <div class="p-4">
-      <Button class="w-full gap-2" @click="$emit('add-expense')">
-        <Plus class="h-4 w-4" />
-        Add Expense
-      </Button>
-    </div>
 
     <!-- Navigation -->
     <nav class="flex-1 space-y-1 px-3 py-2">
