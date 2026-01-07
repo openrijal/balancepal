@@ -1,0 +1,36 @@
+---
+import AppLayout from '@/layouts/AppLayout.astro';
+import RecentActivity from '@/components/dashboard/RecentActivity.vue';
+import { supabase } from '@/lib/supabase';
+
+const accessToken = Astro.cookies.get('sb-access-token')?.value;
+const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
+
+if (!accessToken || !refreshToken) {
+  return Astro.redirect('/login');
+}
+
+// Set session with tokens to enable proper auth and token refresh
+const {
+  data: { user },
+  error,
+} = await supabase.auth.setSession({
+  access_token: accessToken,
+  refresh_token: refreshToken,
+});
+
+if (error || !user) {
+  return Astro.redirect('/login');
+}
+---
+
+<AppLayout title="Recent Activity - Balance Pal">
+  <div class="mx-auto max-w-3xl p-4 md:p-6 lg:p-8">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-gray-900 md:text-3xl">Recent activity</h1>
+    </div>
+    <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+      <RecentActivity client:load currentUserId={user.id} />
+    </div>
+  </div>
+</AppLayout>
