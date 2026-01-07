@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import ExpenseList from './ExpenseList.vue';
 import CreateExpenseDialog from './CreateExpenseDialog.vue';
+import { useGroupsStore } from '@/stores/groupsStore';
+
+const groupsStore = useGroupsStore();
 
 interface Expense {
   id: string;
@@ -16,15 +19,21 @@ interface Expense {
 const props = defineProps<{
   groupId: string;
   initialExpenses: Expense[];
+  memberCount: number;
 }>();
 
 const expenses = ref<Expense[]>(props.initialExpenses);
+const canAddExpense = computed(() => props.memberCount > 1);
 
 async function refreshExpenses() {
     try {
         const res = await fetch(`/api/groups/${props.groupId}/expenses`);
         if (res.ok) {
             expenses.value = await res.json();
+            // Dispatch custom event for other islands to listen
+            window.dispatchEvent(new CustomEvent('balancepal:expenses-changed', {
+                detail: { groupId: props.groupId }
+            }));
         }
     } catch (e) {
         console.error('Failed to refresh expenses', e);
@@ -36,7 +45,10 @@ async function refreshExpenses() {
   <div class="space-y-6">
     <div class="flex items-center justify-between">
         <h2 class="text-xl font-semibold">Expenses</h2>
-        <CreateExpenseDialog :groupId="groupId" @expense-created="refreshExpenses" />
+        <div v-if="!canAddExpense" class="text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+            Invite members to add expenses
+        </div>
+        <CreateExpenseDialog v-else :groupId="groupId" @expense-created="refreshExpenses" />
     </div>
 
     <ExpenseList :expenses="expenses" />

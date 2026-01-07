@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useForm } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/zod';
-import * as z from 'zod';
-import { toast } from 'vue-sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useVModel } from '@vueuse/core';
 import {
   Dialog,
   DialogContent,
@@ -13,83 +8,120 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { UserPlus, Copy, Check, Loader2 } from 'lucide-vue-next';
 
 const props = defineProps<{
   groupId: string;
-  isOpen: boolean;
+  isOpen?: boolean;
+  hideTrigger?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:isOpen', value: boolean): void;
-  (e: 'success'): void;
 }>();
 
-const isLoading = ref(false);
+const open = useVModel(props, 'isOpen', emit);
+const loading = ref(false);
+const email = ref('');
+const inviteLink = ref('');
+const error = ref<string | null>(null);
+const copied = ref(false);
 
-const formSchema = toTypedSchema(
-  z.object({
-    email: z.string().email('Please enter a valid email'),
-  })
-);
+async function handleGenerate() {
+  if (!email.value) return;
 
-const { handleSubmit, errors, defineField, resetForm } = useForm({
-  validationSchema: formSchema,
-});
+  loading.value = true;
+  error.value = null;
+  inviteLink.value = '';
 
-const [email, emailProps] = defineField('email');
-
-const onSubmit = handleSubmit(async (values) => {
-  isLoading.value = true;
   try {
-    const response = await fetch(`/api/groups/${props.groupId}/invite`, {
+    const res = await fetch(`/api/groups/${props.groupId}/invitations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
+      body: JSON.stringify({ email: email.value }),
     });
 
-    if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Failed to send invite');
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to create invitation');
     }
 
-    toast.success('Invitation sent!');
-    resetForm();
-    emit('update:isOpen', false);
-    emit('success');
-    
-  } catch (error: any) {
-    console.error(error);
-    toast.error(error.message || 'Failed to send invitation');
+    const data = await res.json();
+    inviteLink.value = data.link;
+
+  } catch (e: any) {
+    console.error(e);
+    error.value = e.message;
   } finally {
-    isLoading.value = false;
+    loading.value = false;
   }
-});
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(inviteLink.value);
+    copied.value = true;
+    setTimeout(() => copied.value = false, 2000);
+}
+
+function reset() {
+    email.value = '';
+    inviteLink.value = '';
+    error.value = null;
+    copied.value = false;
+}
 </script>
 
 <template>
-  <Dialog :open="isOpen" @update:open="(val) => emit('update:isOpen', val)">
+  <Dialog v-model:open="open" @update:open="val => !val && reset()">
+    <DialogTrigger v-if="!hideTrigger" as-child>
+      <Button variant="outline" size="sm" class="w-full gap-2">
+        <UserPlus class="h-4 w-4" />
+        Invite Member
+      </Button>
+    </DialogTrigger>
     <DialogContent class="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle>Invite Member</DialogTitle>
         <DialogDescription>
-          Send an email invitation to join this group.
+          Generate a unique link to invite someone to this group.
         </DialogDescription>
       </DialogHeader>
-      
-      <form @submit="onSubmit" class="grid gap-4 py-4">
-        <div class="grid gap-2">
-          <label for="email" class="text-sm font-medium">Email Address</label>
-          <Input id="email" type="email" v-model="email" v-bind="emailProps" placeholder="friend@example.com" />
-          <span v-if="errors.email" class="text-sm text-red-500">{{ errors.email }}</span>
+
+      <div class="grid gap-4 py-4">
+        <div v-if="error" class="text-sm text-red-500">{{ error }}</div>
+
+        <div v-if="!inviteLink" class="space-y-4">
+             <div class="space-y-2">
+                <label for="email" class="text-sm font-medium">Friend's Email (for reference)</label>
+                <Input id="email" v-model="email" placeholder="friend@example.com" />
+             </div>
+             <Button class="w-full" @click="handleGenerate" :disabled="loading || !email">
+                <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
+                Generate Link
+             </Button>
         </div>
 
-        <DialogFooter>
-          <Button type="submit" :disabled="isLoading">
-            {{ isLoading ? 'Sending...' : 'Send Invite' }}
-          </Button>
-        </DialogFooter>
-      </form>
+        <div v-else class="space-y-4">
+            <div class="space-y-2">
+                <label class="text-sm font-medium">Invitation Link</label>
+                <div class="flex items-center gap-2">
+                    <Input v-model="inviteLink" readonly />
+                    <Button size="icon" variant="outline" @click="copyLink">
+                        <Check v-if="copied" class="h-4 w-4 text-green-500" />
+                        <Copy v-else class="h-4 w-4" />
+                    </Button>
+                </div>
+                <p class="text-xs text-muted-foreground">
+                    Share this link with your friend. It expires when used.
+                </p>
+            </div>
+            <Button variant="secondary" class="w-full" @click="reset">Invite Another</Button>
+        </div>
+      </div>
     </DialogContent>
   </Dialog>
 </template>

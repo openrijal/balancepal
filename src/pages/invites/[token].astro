@@ -1,0 +1,83 @@
+---
+import { db } from '@/db';
+import { invitations, groupMembers, groups } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
+import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button'; // Usage in template if needed
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const { token } = Astro.params;
+
+if (!token) {
+  return Astro.redirect('/dashboard');
+}
+
+// 1. Check Auth
+const accessToken = Astro.cookies.get('sb-access-token')?.value;
+const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
+
+let user = null;
+if (accessToken && refreshToken) {
+  const { data } = await supabase.auth.getUser(accessToken);
+  user = data.user;
+}
+
+if (!user) {
+  // Redirect to login with return URL
+  // We can pass `?redirect=/invites/[token]`
+  return Astro.redirect(`/login?redirect=/invites/${token}`);
+}
+
+// 2. Validate Token
+const invitation = await db.query.invitations.findFirst({
+  where: eq(invitations.token, token),
+  with: { group: true },
+});
+
+if (!invitation) {
+  // Show Error Page
+  // Since we are in an astro frontmatter, we can just render an error state below or redirect.
+  // Let's render error.
+} else if (invitation.status === 'accepted') {
+  // Already used
+  return Astro.redirect(`/groups/${invitation.groupId}`);
+} else {
+  // 3. Process Acceptance
+  // Check if already member
+  const existingMember = await db.query.groupMembers.findFirst({
+    where: and(eq(groupMembers.groupId, invitation.groupId), eq(groupMembers.userId, user.id)),
+  });
+
+  if (!existingMember) {
+    await db.transaction(async (tx) => {
+      await tx.insert(groupMembers).values({
+        groupId: invitation.groupId,
+        userId: user.id,
+        role: 'member',
+      });
+
+      await tx
+        .update(invitations)
+        .set({ status: 'accepted' })
+        .where(eq(invitations.id, invitation.id));
+    });
+  }
+
+  return Astro.redirect(`/groups/${invitation.groupId}`);
+}
+---
+
+<BaseLayout title="Invitation Error">
+  <div class="flex h-screen items-center justify-center bg-gray-50">
+    <div class="space-y-4 text-center">
+      <h1 class="text-2xl font-bold text-red-600">Invalid Invitation</h1>
+      <p class="text-gray-600">This link is invalid or has expired.</p>
+      <a
+        href="/dashboard"
+        class="bg-primary text-primary-foreground hover:bg-primary/90 inline-block rounded-md px-4 py-2 font-medium"
+      >
+        Go to Dashboard
+      </a>
+    </div>
+  </div>
+</BaseLayout>

@@ -5,6 +5,8 @@ import { GroupService } from '@/services/groups';
 import { ExpenseService } from '@/services/expenses';
 import { supabase } from '@/lib/supabase';
 import ExpensesContainer from '@/components/expenses/ExpensesContainer.vue';
+import BalanceList from '@/components/balances/BalanceList.vue';
+import InviteMemberDialog from '@/components/groups/InviteMemberDialog.vue';
 
 const { id } = Astro.params;
 
@@ -58,38 +60,25 @@ const expenses = await ExpenseService.getGroupExpenses(group.id);
       groupId={group.id}
       groupName={group.name}
       description={group.description}
+      members={group.members}
+      currentUserId={user.id}
     />
 
     <div class="grid gap-6 md:grid-cols-3">
       <!-- Main Content (Expenses List) -->
       <div class="space-y-4 md:col-span-2">
-        <ExpensesContainer client:load groupId={group.id} initialExpenses={expenses} />
+        <ExpensesContainer
+          client:load
+          groupId={group.id}
+          initialExpenses={expenses}
+          memberCount={group.members.length}
+        />
       </div>
 
-      <!-- Sidebar (Members) -->
+      <!-- Sidebar (Balances) -->
       <div class="space-y-6">
-        <div class="bg-card text-card-foreground rounded-lg border p-4 shadow-sm">
-          <h3 class="mb-4 font-semibold">Members</h3>
-          <ul class="space-y-3">
-            {
-              group.members.map((member) => (
-                <li class="flex items-center gap-3">
-                  <div class="bg-secondary relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full">
-                    <span class="bg-muted flex h-full w-full items-center justify-center rounded-full text-xs font-medium uppercase">
-                      {member.user.name?.charAt(0) || 'U'}
-                    </span>
-                  </div>
-                  <div class="flex-1 overflow-hidden">
-                    <p class="truncate text-sm leading-none font-medium">{member.user.name}</p>
-                    <p class="text-muted-foreground truncate text-xs">
-                      {member.role === 'admin' ? 'Admin' : 'Member'}
-                    </p>
-                  </div>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
+        <!-- Balances Section -->
+        <BalanceList client:load groupId={group.id} currentUserId={user.id} />
       </div>
     </div>
   </div>

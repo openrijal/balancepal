@@ -80,6 +80,44 @@ export const useGroupsStore = defineStore('groups', () => {
     error.value = newError;
   }
 
+  async function fetchGroupStats(groupId: string) {
+    try {
+      const res = await fetch(`/api/groups/${groupId}/stats`);
+      if (res.ok) {
+        const data = await res.json();
+
+        // Initialize currentGroup if not set or if it's a different group
+        if (!currentGroup.value || currentGroup.value.id !== groupId) {
+          currentGroup.value = {
+            id: groupId,
+            name: '',
+            description: null,
+            imageUrl: null,
+            createdBy: '',
+            createdAt: '',
+            totalExpenses: data.totalExpenses,
+            userBalance: data.userBalance,
+          };
+        } else {
+          // Update existing currentGroup
+          currentGroup.value = {
+            ...currentGroup.value,
+            totalExpenses: data.totalExpenses,
+            userBalance: data.userBalance,
+          };
+        }
+
+        // Also update in groups array if present
+        updateGroup(groupId, {
+          totalExpenses: data.totalExpenses,
+          userBalance: data.userBalance,
+        });
+      }
+    } catch (e) {
+      console.error('Failed to fetch group stats', e);
+    }
+  }
+
   function clearGroups() {
     groups.value = [];
     currentGroup.value = null;
@@ -104,6 +142,7 @@ export const useGroupsStore = defineStore('groups', () => {
     removeGroup,
     setLoading,
     setError,
+    fetchGroupStats,
     clearGroups,
   };
 });
