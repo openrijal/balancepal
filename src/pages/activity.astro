@@ -1,9 +1,14 @@
 ---
 import AppLayout from '@/layouts/AppLayout.astro';
 import RecentActivity from '@/components/dashboard/RecentActivity.vue';
+import { GroupService } from '@/services/groups';
 
 // User is attached by middleware (already authenticated by middleware)
 const user = Astro.locals.user!;
+
+// Fetch user's groups for the filter
+const groups = await GroupService.getUserGroups(user.id);
+const groupsForFilter = groups.map((g) => ({ id: g.id, name: g.name }));
 ---
 
 <AppLayout title="Recent Activity - Balance Pal">
@@ -13,7 +18,7 @@ const user = Astro.locals.user!;
       <p class="mt-1 text-gray-600">A narrative history of your group transactions.</p>
     </div>
     <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-      <RecentActivity client:load currentUserId={user.id} />
+      <RecentActivity client:load currentUserId={user.id} groups={groupsForFilter} />
     </div>
   </div>
 </AppLayout>

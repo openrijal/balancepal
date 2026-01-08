@@ -9,60 +9,81 @@ interface ActivityItem {
     description: string;
     amount: number;
     date: string;
+    groupId: string;
     groupName: string;
     user: {
+        id: string;
         name: string;
     };
     recipient?: {
+        id: string;
         name: string;
     };
 }
 
-export const GET: APIRoute = async ({ locals }) => {
+export const GET: APIRoute = async ({ locals, request }) => {
     // User is attached by middleware (401 already handled by middleware)
     const user = locals.user!;
 
+    // Parse optional groupIds filter from query params
+    const url = new URL(request.url);
+    const groupIdsParam = url.searchParams.get('groupIds');
+    const filterGroupIds = groupIdsParam ? groupIdsParam.split(',').filter(Boolean) : null;
+
     try {
         // Get all user's groups
-        const groups = await GroupService.getUserGroups(user.id);
+        let groups = await GroupService.getUserGroups(user.id);
+
+        // Filter to specific groups if requested
+        if (filterGroupIds && filterGroupIds.length > 0) {
+            groups = groups.filter(g => filterGroupIds.includes(g.id));
+        }
 
         const activities: ActivityItem[] = [];
 
         // Fetch recent expenses and settlements from each group
-        for (const group of groups.slice(0, 5)) { // Limit to 5 groups for performance
+        // When filtering, process all matched groups; otherwise limit to 5 for performance
+        const groupsToProcess = filterGroupIds ? groups : groups.slice(0, 5);
+
+        for (const group of groupsToProcess) {
             const [expenses, settlements] = await Promise.all([
                 ExpenseService.getGroupExpenses(group.id),
                 SettlementService.getGroupSettlements(group.id),
             ]);
 
             // Add expenses to activities
-            for (const expense of expenses.slice(0, 5)) {
+            for (const expense of expenses.slice(0, 10)) {
                 activities.push({
                     id: expense.id,
                     type: 'expense',
                     description: expense.description,
                     amount: parseFloat(expense.amount),
                     date: expense.date.toISOString(),
+                    groupId: group.id,
                     groupName: group.name,
                     user: {
+                        id: expense.paidBy?.id || '',
                         name: expense.paidBy?.name || 'Unknown',
                     },
                 });
             }
 
             // Add settlements to activities
-            for (const settlement of settlements.slice(0, 5)) {
+            for (const settlement of settlements.slice(0, 10)) {
                 activities.push({
                     id: settlement.id,
                     type: 'settlement',
                     description: `Payment to ${settlement.toUser?.name || 'Unknown'}`,
                     amount: parseFloat(settlement.amount),
                     date: settlement.date.toISOString(),
+                    groupId: group.id,
                     groupName: group.name,
                     user: {
+                        id: settlement.fromUser?.id || '',
                         name: settlement.fromUser?.name || 'Unknown',
                     },
                     recipient: {
+                        id: settlement.toUser?.id || '',
                         name: settlement.toUser?.name || 'Unknown',
                     },
                 });

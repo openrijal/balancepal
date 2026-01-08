@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { 
   Receipt, 
   Utensils, 
@@ -10,6 +10,12 @@ import {
   CreditCard,
 } from 'lucide-vue-next';
 import TransactionItem from './TransactionItem.vue';
+import GroupFilter from '../dashboard/GroupFilter.vue';
+
+interface Group {
+  id: string;
+  name: string;
+}
 
 interface Activity {
   id: string;
@@ -31,10 +37,14 @@ interface Activity {
 
 const props = defineProps<{
   currentUserId: string;
+  groups?: Group[];
 }>();
 
 const activities = ref<Activity[]>([]);
 const loading = ref(true);
+const selectedGroupIds = ref<string[]>([]);
+
+const showFilter = computed(() => props.groups && props.groups.length > 0);
 
 const formatMonthYear = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -113,9 +123,14 @@ const getExpenseDebtContext = (activity: Activity) => {
   }
 };
 
-onMounted(async () => {
+async function fetchActivities() {
+  loading.value = true;
   try {
-    const res = await fetch('/api/expenses/all', { credentials: 'include' });
+    let url = '/api/expenses/all';
+    if (selectedGroupIds.value.length > 0) {
+      url += `?groupIds=${selectedGroupIds.value.join(',')}`;
+    }
+    const res = await fetch(url, { credentials: 'include' });
     if (res.ok) {
       activities.value = await res.json();
     }
@@ -124,11 +139,21 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
-});
+}
+
+// Watch for filter changes
+watch(selectedGroupIds, fetchActivities);
+
+onMounted(fetchActivities);
 </script>
 
 <template>
   <div class="space-y-6">
+    <!-- Group Filter -->
+    <div v-if="showFilter && groups" class="flex justify-end">
+      <GroupFilter :groups="groups" v-model="selectedGroupIds" />
+    </div>
+
     <div v-if="loading" class="space-y-4">
       <div v-for="i in 3" :key="i" class="h-20 bg-gray-100 animate-pulse rounded-xl"></div>
     </div>

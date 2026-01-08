@@ -113,11 +113,6 @@ onMounted(fetchMemberBalances);
         </div>
       </div>
     </div>
-    
-    <!-- Action Bar -->
-    <div class="p-3 bg-gray-50/30 text-center border-t border-gray-100">
-      <a href="#" class="text-[10px] uppercase font-bold text-sky-600 hover:text-sky-700 transition-colors">View detailed balances »</a>
-    </div>
 
     <!-- Invitation Dialog -->
     <InviteMemberDialog 

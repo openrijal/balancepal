@@ -5,6 +5,7 @@ import { GroupService } from '@/services/groups';
 import { ExpenseService } from '@/services/expenses';
 import ExpensesContainer from '@/components/expenses/ExpensesContainer.vue';
 import GroupSidebar from '@/components/groups/GroupSidebar.vue';
+import GroupActivity from '@/components/groups/GroupActivity.vue';
 
 const { id } = Astro.params;
 
@@ -35,7 +36,15 @@ if (!isMember) {
   return Astro.redirect('/groups'); // Or show access denied
 }
 
-const expenses = await ExpenseService.getGroupExpenses(group.id);
+const rawExpenses = await ExpenseService.getGroupExpenses(group.id);
+
+// Serialize dates for Vue component
+const expenses = rawExpenses.map((exp) => ({
+  ...exp,
+  date: exp.date.toISOString(),
+  updatedAt: exp.updatedAt?.toISOString(),
+  createdAt: exp.createdAt?.toISOString(),
+}));
 ---
 
 <AppLayout title={group.name}>
@@ -69,6 +78,7 @@ const expenses = await ExpenseService.getGroupExpenses(group.id);
       <!-- Sidebar (Members & Balances) -->
       <div class="space-y-6">
         <GroupSidebar client:load groupId={group.id} currentUserId={user.id} />
+        <GroupActivity client:load groupId={group.id} currentUserId={user.id} />
       </div>
     </div>
   </div>

@@ -1,6 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { Clock, ArrowRight, Receipt, CreditCard } from 'lucide-vue-next';
+import { ref, onMounted, watch, computed } from 'vue';
+import { Clock, ArrowRight, Receipt, CreditCard, Filter } from 'lucide-vue-next';
+import GroupFilter from './GroupFilter.vue';
+
+interface Group {
+  id: string;
+  name: string;
+}
 
 interface ActivityItem {
   id: string;
@@ -8,6 +14,7 @@ interface ActivityItem {
   description: string;
   amount: number;
   date: string;
+  groupId: string;
   groupName: string;
   user: {
     id: string;
@@ -21,10 +28,19 @@ interface ActivityItem {
 
 const props = defineProps<{
   currentUserId: string;
+  // For the main activity page - show filter
+  groups?: Group[];
+  // For group-specific view (group detail page)
+  groupId?: string;
+  // Compact mode for sidebar panels
+  compact?: boolean;
 }>();
 
 const activities = ref<ActivityItem[]>([]);
 const loading = ref(true);
+const selectedGroupIds = ref<string[]>([]);
+
+const showFilter = computed(() => props.groups && props.groups.length > 0 && !props.groupId);
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -50,8 +66,26 @@ const formatDate = (dateString: string) => {
 };
 
 async function fetchActivity() {
+  loading.value = true;
   try {
-    const res = await fetch('/api/dashboard/activity', { credentials: 'include' });
+    // Build URL with optional filters
+    let url = '/api/dashboard/activity';
+    const params = new URLSearchParams();
+    
+    // Single group mode (group detail page)
+    if (props.groupId) {
+      params.set('groupIds', props.groupId);
+    }
+    // Multi-group filter mode (activity page)
+    else if (selectedGroupIds.value.length > 0) {
+      params.set('groupIds', selectedGroupIds.value.join(','));
+    }
+    
+    if (params.toString()) {
+      url += '?' + params.toString();
+    }
+
+    const res = await fetch(url, { credentials: 'include' });
     if (res.ok) {
       activities.value = await res.json();
     }
@@ -66,20 +100,35 @@ const getActivityDescription = (activity: ActivityItem) => {
   const userName = activity.user.id === props.currentUserId ? 'You' : activity.user.name;
   
   if (activity.type === 'expense') {
+    if (props.groupId) {
+      // Compact mode - don't show group name
+      return `${userName} added "${activity.description}"`;
+    }
     return `${userName} added "${activity.description}" in "${activity.groupName}"`;
   } else {
     const recipientName = activity.recipient?.id === props.currentUserId ? 'you' : activity.recipient?.name;
+    if (props.groupId) {
+      return `${userName} paid ${recipientName}`;
+    }
     return `${userName} paid ${recipientName} in "${activity.groupName}"`;
   }
 };
+
+// Watch for filter changes
+watch(selectedGroupIds, fetchActivity);
 
 onMounted(fetchActivity);
 </script>
 
 <template>
   <div class="rounded-xl border border-gray-100 bg-white shadow-sm flex flex-col">
-    <div class="p-4 border-b border-gray-50">
+    <div class="p-4 border-b border-gray-50 flex items-center justify-between gap-4">
       <h2 class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Activity Feed</h2>
+      <GroupFilter 
+        v-if="showFilter && groups" 
+        :groups="groups" 
+        v-model="selectedGroupIds" 
+      />
     </div>
     
     <!-- Loading -->
@@ -135,7 +184,7 @@ onMounted(fetchActivity);
     </div>
     
     <div class="p-3 bg-gray-50/30 text-center border-t border-gray-100 shrink-0">
-      <a href="#" class="text-[10px] uppercase font-bold text-sky-600 hover:text-sky-700 transition-colors">See all activity »</a>
+      <a href="/activity" class="text-[10px] uppercase font-bold text-sky-600 hover:text-sky-700 transition-colors">See all activity »</a>
     </div>
   </div>
 </template>

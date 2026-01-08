@@ -3,13 +3,23 @@ import { GroupService } from '@/services/groups';
 import { ExpenseService } from '@/services/expenses';
 import { SettlementService } from '@/services/settlements';
 
-export const GET: APIRoute = async ({ locals }) => {
+export const GET: APIRoute = async ({ locals, request }) => {
     // User is attached by middleware (401 already handled by middleware)
     const user = locals.user!;
 
+    // Parse optional groupIds filter from query params
+    const url = new URL(request.url);
+    const groupIdsParam = url.searchParams.get('groupIds');
+    const filterGroupIds = groupIdsParam ? groupIdsParam.split(',').filter(Boolean) : null;
+
     try {
         // 1. Get all user's groups
-        const groups = await GroupService.getUserGroups(user.id);
+        let groups = await GroupService.getUserGroups(user.id);
+
+        // Filter to specific groups if requested
+        if (filterGroupIds && filterGroupIds.length > 0) {
+            groups = groups.filter(g => filterGroupIds.includes(g.id));
+        }
 
         const allActivities: any[] = [];
 
