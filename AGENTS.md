@@ -129,19 +129,41 @@ PUBLIC_APP_URL=http://localhost:4321
 
 > Get `DATABASE_URL` from Supabase: **Settings → Database → Connection String → URI**
 
-## Database Tables
+## Database Schema
 
-| Table | Purpose |
-|-------|---------|
-| `profiles` | User profiles |
-| `groups` | Expense groups |
-| `group_members` | Membership + roles |
-| `expenses` | Expense records |
-| `expense_splits` | How expenses are split |
-| `receipts` | Receipt images |
-| `settlements` | Payment records |
-| `notifications` | User notifications |
-| `invitations` | Group invitations |
+### Enums
+
+| Enum | Values |
+|------|--------|
+| `member_role` | `admin`, `member` |
+| `expense_category` | `food`, `transport`, `entertainment`, `utilities`, `shopping`, `other` |
+| `payment_method` | `cash`, `venmo`, `paypal`, `zelle`, `bank_transfer`, `other` |
+| `invitation_status` | `pending`, `accepted`, `declined`, `expired` |
+| `notification_type` | `group_invite`, `expense_added`, `settlement_recorded`, `balance_reminder`, `member_joined` |
+
+### Tables
+
+| Table | Key Columns | Purpose |
+|-------|-------------|---------|
+| `profiles` | `id` (PK, links to auth.users), `email`, `name`, `profile_picture_url` | User profiles |
+| `groups` | `id` (PK), `name`, `description`, `image_url`, `created_by` → profiles | Expense groups |
+| `group_members` | `id` (PK), `group_id` → groups, `user_id` → profiles, `role` | Membership + roles |
+| `expenses` | `id` (PK), `group_id` → groups, `paid_by_user_id` → profiles, `amount`, `category`, `deleted_at` | Expense records (soft delete) |
+| `expense_splits` | `id` (PK), `expense_id` → expenses, `user_id` → profiles, `amount`, `paid` | How expenses are split |
+| `receipts` | `id` (PK), `expense_id` → expenses, `image_url` | Receipt images |
+| `settlements` | `id` (PK), `group_id` → groups, `from_user_id` → profiles, `to_user_id` → profiles, `amount`, `payment_method`, `verified` | Payment records |
+| `notifications` | `id` (PK), `user_id` → profiles, `type`, `title`, `message`, `data`, `read` | User notifications |
+| `invitations` | `id` (PK), `group_id` → groups, `email`, `invited_by` → profiles, `token`, `status` | Group invitations |
+
+### Key RLS Rules
+
+- **Profiles**: Viewable by all; users can only insert/update their own
+- **Groups**: Viewable/updatable by members; only admins can delete
+- **Group Members**: Viewable by group members; admins manage membership
+- **Expenses**: Group members can view/create; creators and admins can update/delete
+- **Settlements**: Group members can view; payer records payment
+- **Notifications**: Users can only access their own
+- **Invitations**: Viewable by inviter, invitee, or group admins
 
 ## Development Commands
 
@@ -216,19 +238,3 @@ This is a **mobile-first** application. Design decisions should prioritize:
 - ✅ HTTPS only in production
 - ✅ Secure token storage
 
-## Current Phase
-
-**Phase 3: Group Management & Features** - Implementing core functional flows: Groups, Members, and Expenses.
-- [x] Group Management (Create, List, Details)
-- [x] Member Management (Invite, Roles)
-- [ ] Expense Tracking (Create, Split, List)
-
-**Phase 2: Authentication & Core Architecture** - Completed
-- [x] Refactor Auth to SSR (Cookie-based)
-- [x] Implement DI (Provide/Inject) Infrastructure
-- [x] Migrate to Strict Types (No `any`)
-
-**Phase 1: Project Integration & Setup** - Completed
-- [x] Initial Project Setup
-- [x] Database Schema & ORM Setup
-- [x] Basic UI Components
