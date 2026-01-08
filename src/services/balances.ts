@@ -143,4 +143,45 @@ export class BalanceService {
             userBalance
         };
     }
+
+    /**
+     * Check if a specific member has any outstanding balance in the group.
+     * Returns the net balance amount (positive = owed money, negative = owes money).
+     * A member can only be removed if their balance is 0.
+     */
+    static async getMemberOutstandingBalance(groupId: string, userId: string): Promise<{ hasBalance: boolean; balance: number; debts: Debt[] }> {
+        const allDebts = await this.getGroupBalances(groupId);
+
+        // Find debts involving this user
+        const userDebts = allDebts.filter(
+            debt => debt.fromUserId === userId || debt.toUserId === userId
+        );
+
+        // Calculate net balance
+        let balance = 0;
+        for (const debt of userDebts) {
+            if (debt.toUserId === userId) {
+                // Someone owes this user
+                balance += debt.amount;
+            } else if (debt.fromUserId === userId) {
+                // This user owes someone
+                balance -= debt.amount;
+            }
+        }
+
+        return {
+            hasBalance: Math.abs(balance) >= 0.01,
+            balance,
+            debts: userDebts
+        };
+    }
+
+    /**
+     * Check if there are any outstanding balances in the group.
+     * A group can only be deleted if all balances are settled (no debts exist).
+     */
+    static async hasOutstandingBalances(groupId: string): Promise<boolean> {
+        const debts = await this.getGroupBalances(groupId);
+        return debts.length > 0;
+    }
 }

@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { groups, groupMembers, invitations, type memberRoleEnum } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 
 export interface CreateGroupData {
     name: string;
@@ -94,6 +94,45 @@ export class GroupService {
             role: role as any,
         }).returning();
         return newMember;
+    }
+
+    static async updateGroup(groupId: string, data: { name?: string; description?: string }) {
+        const [updated] = await db
+            .update(groups)
+            .set({
+                ...(data.name !== undefined && { name: data.name }),
+                ...(data.description !== undefined && { description: data.description }),
+            })
+            .where(eq(groups.id, groupId))
+            .returning();
+        return updated;
+    }
+
+    static async removeMember(groupId: string, userId: string) {
+        const deleted = await db
+            .delete(groupMembers)
+            .where(
+                and(
+                    eq(groupMembers.groupId, groupId),
+                    eq(groupMembers.userId, userId)
+                )
+            )
+            .returning();
+
+        return deleted.length > 0;
+    }
+
+    static async deleteGroup(groupId: string) {
+        // Due to cascade delete on the schema, this will also remove:
+        // - groupMembers
+        // - expenses (and their splits, receipts)
+        // - settlements
+        // - invitations
+        const [deleted] = await db
+            .delete(groups)
+            .where(eq(groups.id, groupId))
+            .returning();
+        return deleted;
     }
 }
 

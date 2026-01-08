@@ -124,6 +124,80 @@ export const useGroupsStore = defineStore('groups', () => {
     error.value = null;
   }
 
+  async function updateGroupDetails(groupId: string, data: { name: string; description?: string }) {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/groups/${groupId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update group');
+      }
+
+      const updated = await res.json();
+      updateGroup(groupId, updated);
+      return { success: true, data: updated };
+    } catch (e: any) {
+      setError(e.message);
+      return { success: false, error: e.message };
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteGroupById(groupId: string) {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/groups/${groupId}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to delete group');
+      }
+
+      removeGroup(groupId);
+      return { success: true };
+    } catch (e: any) {
+      setError(e.message);
+      return { success: false, error: e.message };
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function removeMemberFromGroup(groupId: string, userId: string) {
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to remove member');
+      }
+
+      // Update local state - remove member from currentGroup
+      if (currentGroup.value?.id === groupId && currentGroup.value.members) {
+        currentGroup.value = {
+          ...currentGroup.value,
+          members: currentGroup.value.members.filter(m => m.userId !== userId),
+        };
+      }
+
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
   return {
     // State
     groups,
@@ -144,5 +218,8 @@ export const useGroupsStore = defineStore('groups', () => {
     setError,
     fetchGroupStats,
     clearGroups,
+    updateGroupDetails,
+    deleteGroupById,
+    removeMemberFromGroup,
   };
 });

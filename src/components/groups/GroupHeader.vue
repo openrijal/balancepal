@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-vue-next';
+import { UserPlus, Settings } from 'lucide-vue-next';
 import InviteMemberDialog from './InviteMemberDialog.vue';
+import GroupSettingsDialog from './GroupSettingsDialog.vue';
 import { useGroupsStore } from '@/stores/groupsStore';
 
 interface Props {
@@ -16,6 +17,12 @@ interface Props {
 const props = defineProps<Props>();
 const groupsStore = useGroupsStore();
 const showInviteDialog = ref(false);
+const showSettingsDialog = ref(false);
+
+// Local state for reactive updates (to avoid page refresh)
+const displayName = ref(props.groupName);
+const displayDescription = ref(props.description);
+const localMembers = ref(props.members);
 
 const totalExpenses = computed(() => {
   if (groupsStore.currentGroup?.id === props.groupId) {
@@ -49,6 +56,17 @@ const balancePrefix = computed(() => {
   return '';
 });
 
+function handleGroupUpdated(data: { name: string; description: string | null }) {
+  // Update local state from emitted data
+  displayName.value = data.name;
+  displayDescription.value = data.description;
+}
+
+function handleMemberRemoved(userId: string) {
+  // Update local members list
+  localMembers.value = localMembers.value.filter(m => m.userId !== userId);
+}
+
 onMounted(() => {
   groupsStore.fetchGroupStats(props.groupId);
 });
@@ -58,10 +76,19 @@ onMounted(() => {
   <div class="flex flex-col gap-4 border-b pb-6 mb-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900">{{ groupName }}</h1>
-        <p v-if="description" class="text-muted-foreground mt-1 text-sm">{{ description }}</p>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">{{ displayName }}</h1>
+        <p v-if="displayDescription" class="text-muted-foreground mt-1 text-sm">{{ displayDescription }}</p>
       </div>
       <div class="flex gap-2 items-center">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          class="h-9 w-9"
+          @click="showSettingsDialog = true"
+        >
+          <Settings class="h-5 w-5" />
+          <span class="sr-only">Group Settings</span>
+        </Button>
       </div>
     </div>
     
@@ -69,6 +96,18 @@ onMounted(() => {
       :groupId="groupId" 
       v-model:isOpen="showInviteDialog" 
       hide-trigger
+    />
+    
+    <GroupSettingsDialog
+      :groupId="groupId"
+      :groupName="displayName"
+      :description="displayDescription"
+      :members="localMembers"
+      :currentUserId="currentUserId"
+      v-model:isOpen="showSettingsDialog"
+      hide-trigger
+      @group-updated="handleGroupUpdated"
+      @member-removed="handleMemberRemoved"
     />
     
     <!-- Stats Section -->
