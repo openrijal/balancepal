@@ -86,4 +86,14 @@ export class GroupService {
         }).returning();
         return invitation;
     }
+
+    static async addMember(groupId: string, userId: string, role: string = 'member') {
+        const [newMember] = await db.insert(groupMembers).values({
+            groupId,
+            userId,
+            role: role as any,
+        }).returning();
+        return newMember;
+    }
 }
+

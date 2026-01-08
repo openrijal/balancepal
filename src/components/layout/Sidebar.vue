@@ -124,17 +124,11 @@ const handleCreateGroup = async () => {
 };
 
 const handleInviteFriend = async () => {
-  if (!inviteEmail.value.trim()) return;
-  
-  inviteLoading.value = true;
-  try {
-    // For now, just show a toast - actual invitation logic would require selecting a group
-    toast.info('To invite a friend, go to a group and invite them from there.');
-    inviteEmail.value = '';
+    toast.info('Friends are added by inviting them to a group.', {
+      description: 'Go to any group and click "Invite" to add someone to Balance Pal.',
+      duration: 5000,
+    });
     inviteFriendOpen.value = false;
-  } finally {
-    inviteLoading.value = false;
-  }
 };
 </script>
 
