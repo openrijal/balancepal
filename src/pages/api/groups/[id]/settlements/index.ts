@@ -25,7 +25,7 @@ export const POST: APIRoute = async ({ request, cookies, params }) => {
         }
 
         const settlement = await SettlementService.createSettlement(groupId, {
-            fromUserId: user.id, // Authenticated user is the payer
+            fromUserId: body.fromUserId || user.id, // Allow specifying payer, defaults to current user
             toUserId: body.toUserId,
             amount: body.amount,
             paymentMethod: body.paymentMethod || 'cash',

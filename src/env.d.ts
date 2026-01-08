@@ -1,7 +1,5 @@
 /// <reference types="astro/client" />
 
-import type { User } from '@supabase/supabase-js';
-
 interface ImportMetaEnv {
   readonly SUPABASE_URL: string;
   readonly SUPABASE_ANON_KEY: string;
@@ -13,8 +11,16 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-declare namespace App {
-  interface Locals {
-    user: User | null;
+declare global {
+  namespace App {
+    interface Locals {
+      user: {
+        id: string;
+        email: string;
+        name: string;
+      } | null;
+    }
   }
 }
+
+export { };

@@ -57,6 +57,11 @@ const expenses = await ExpenseService.getGroupExpenses(group.id);
           groupId={group.id}
           initialExpenses={expenses}
           memberCount={group.members.length}
+          members={group.members.map((m) => ({
+            id: m.user.id,
+            name: m.user.name,
+            profilePictureUrl: m.user.profilePictureUrl,
+          }))}
           currentUserId={user.id}
         />
       </div>

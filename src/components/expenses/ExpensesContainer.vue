@@ -2,9 +2,16 @@
 import { ref, computed } from 'vue';
 import ExpenseList from './ExpenseList.vue';
 import CreateExpenseDialog from './CreateExpenseDialog.vue';
+import SettleUpDialog from '../settlements/SettleUpDialog.vue';
 import { useGroupsStore } from '@/stores/groupsStore';
 
 const groupsStore = useGroupsStore();
+
+interface Member {
+  id: string;
+  name: string;
+  profilePictureUrl?: string | null;
+}
 
 interface Expense {
   id: string;
@@ -28,6 +35,7 @@ const props = defineProps<{
   groupId: string;
   initialExpenses: Expense[];
   memberCount: number;
+  members: Member[];
   currentUserId: string;
 }>();
 
@@ -55,7 +63,15 @@ async function refreshExpenses() {
         <div v-if="!canAddExpense" class="text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
             Invite members to add expenses
         </div>
-        <CreateExpenseDialog v-else :groupId="groupId" @expense-created="refreshExpenses" />
+        <div v-else class="flex items-center gap-2">
+            <CreateExpenseDialog :groupId="groupId" @expense-created="refreshExpenses" />
+            <SettleUpDialog 
+              :groupId="groupId" 
+              :members="members" 
+              :currentUserId="currentUserId"
+              @settlement-created="refreshExpenses" 
+            />
+        </div>
     </div>
 
     <ExpenseList :expenses="expenses" :current-user-id="currentUserId" />
