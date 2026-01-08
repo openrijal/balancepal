@@ -62,10 +62,6 @@ onMounted(() => {
         <p v-if="description" class="text-muted-foreground mt-1 text-sm">{{ description }}</p>
       </div>
       <div class="flex gap-2 items-center">
-        <Button variant="outline" size="sm" @click="showInviteDialog = true" class="rounded-lg shadow-sm border-gray-200">
-          <UserPlus class="w-4 h-4 mr-2" />
-          Invite
-        </Button>
       </div>
     </div>
     

@@ -53,10 +53,18 @@ onMounted(fetchMemberBalances);
 
 <template>
   <div class="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden h-fit sticky top-24">
-    <div class="bg-gray-50/50 border-b border-gray-100 p-4">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500">Members & Balances</h2>
+    <div class="bg-gray-50/50 border-b border-gray-100 p-3 flex items-center justify-between">
+      <h2 class="text-[10px] font-black uppercase tracking-widest text-gray-500">Balances</h2>
+      <button 
+        @click="showInviteDialog = true"
+        class="flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-[10px] font-bold text-sky-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 transition-all uppercase tracking-tight"
+      >
+        <UserPlus class="w-3.5 h-3.5" />
+        Invite members
+      </button>
     </div>
 
+    <!-- Loading state skipped for brevity in this replacement chunk, but I'll keep the full structure -->
     <div v-if="loading" class="p-8 text-center bg-white">
       <div class="animate-pulse text-gray-400 text-sm">Loading members...</div>
     </div>
@@ -107,18 +115,8 @@ onMounted(fetchMemberBalances);
     </div>
     
     <!-- Action Bar -->
-    <div class="p-3 bg-gray-50/30 flex flex-col gap-2 border-t border-gray-100">
-      <button 
-        @click="showInviteDialog = true"
-        class="flex items-center justify-center gap-2 w-full py-2 px-4 rounded-lg text-xs font-bold text-gray-700 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 transition-all"
-      >
-        <UserPlus class="w-3.5 h-3.5" />
-        Invite Member
-      </button>
-      
-      <div class="flex justify-center pt-1">
-        <a href="#" class="text-[10px] uppercase font-bold text-sky-600 hover:text-sky-700 transition-colors">View detailed balances »</a>
-      </div>
+    <div class="p-3 bg-gray-50/30 text-center border-t border-gray-100">
+      <a href="#" class="text-[10px] uppercase font-bold text-sky-600 hover:text-sky-700 transition-colors">View detailed balances »</a>
     </div>
 
     <!-- Invitation Dialog -->
