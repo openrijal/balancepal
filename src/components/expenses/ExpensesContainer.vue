@@ -18,6 +18,7 @@ interface Expense {
   description: string;
   amount: number | string;
   date: string;
+  category: string;
   paidBy: {
     id: string;
     name: string;
