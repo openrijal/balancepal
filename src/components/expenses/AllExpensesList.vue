@@ -8,8 +8,8 @@ import {
   Lightbulb, 
   ShoppingBag,
   CreditCard,
-  ChevronRight
 } from 'lucide-vue-next';
+import TransactionItem from './TransactionItem.vue';
 
 interface Activity {
   id: string;
@@ -22,7 +22,11 @@ interface Activity {
   paidBy?: { id: string; name: string };
   fromUser?: { id: string; name: string };
   toUser?: { id: string; name: string };
-  splits?: { userId: string; amount: string | number }[];
+  splits?: { 
+    userId: string; 
+    user: { id: string; name: string };
+    amount: string | number 
+  }[];
 }
 
 const props = defineProps<{
@@ -140,67 +144,70 @@ onMounted(async () => {
       </h3>
       
       <div class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div 
+        <TransactionItem 
           v-for="activity in group.items" 
           :key="activity.id"
-          class="group flex items-center justify-between p-4 transition-colors hover:bg-gray-50/50"
+          :transaction="activity"
+          :current-user-id="currentUserId"
         >
-          <div class="flex items-center gap-4 flex-1 min-w-0">
-            <!-- Date Box -->
-            <div class="flex flex-col items-center justify-center text-center w-10 shrink-0">
-              <span class="text-[10px] font-bold text-gray-400 tracking-tighter">{{ formatDate(activity.date).month }}</span>
-              <span class="text-xl font-medium text-gray-600 leading-none">{{ formatDate(activity.date).day }}</span>
-            </div>
+          <template #header>
+            <div class="flex items-center justify-between w-full">
+              <div class="flex items-center gap-4 flex-1 min-w-0">
+                <!-- Date Box -->
+                <div class="flex flex-col items-center justify-center text-center w-10 shrink-0">
+                  <span class="text-[10px] font-bold text-gray-400 tracking-tighter">{{ formatDate(activity.date).month }}</span>
+                  <span class="text-xl font-medium text-gray-600 leading-none">{{ formatDate(activity.date).day }}</span>
+                </div>
 
-            <!-- Icon -->
-            <div :class="['flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-all', 
-              activity.type === 'settlement' ? 'bg-orange-50 border-orange-100 text-orange-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600']">
-              <component :is="getCategoryIcon(activity)" class="h-5 w-5" />
-            </div>
+                <!-- Icon -->
+                <div :class="['flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-all', 
+                  activity.type === 'settlement' ? 'bg-orange-50 border-orange-100 text-orange-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600']">
+                  <component :is="getCategoryIcon(activity)" class="h-5 w-5" />
+                </div>
 
-            <div class="min-w-0">
-              <template v-if="activity.type === 'settlement'">
-                <p class="text-[13px] font-medium text-gray-900 leading-snug">
-                  {{ getSettlementNarrative(activity) }}
-                </p>
-              </template>
-              <template v-else>
-                <h4 class="font-bold text-gray-900 leading-none mb-1">{{ activity.description }}</h4>
-                <span class="inline-block px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
-                  {{ activity.groupName }}
-                </span>
-              </template>
-            </div>
-          </div>
+                <div class="min-w-0">
+                  <template v-if="activity.type === 'settlement'">
+                    <p class="text-[13px] font-medium text-gray-900 leading-snug truncate">
+                      {{ getSettlementNarrative(activity) }}
+                    </p>
+                  </template>
+                  <template v-else>
+                    <h4 class="font-bold text-gray-900 leading-none mb-1 truncate">{{ activity.description }}</h4>
+                    <span class="inline-block px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                      {{ activity.groupName }}
+                    </span>
+                  </template>
+                </div>
+              </div>
 
-          <!-- Payer/Receiver Columns (Matching Layout) -->
-          <div class="flex items-center gap-8 md:gap-12 shrink-0 ml-4">
-            <!-- Who paid -->
-            <div v-if="activity.type === 'expense'" class="hidden sm:block text-right w-24">
-              <p class="text-[10px] font-bold text-gray-400 uppercase leading-none mb-0.5">
-                {{ activity.paidBy?.id === currentUserId ? 'You' : activity.paidBy?.name.split(' ')[0] }} paid
-              </p>
-              <p class="text-sm font-bold text-gray-800">{{ formatCurrency(activity.amount) }}</p>
-            </div>
+              <!-- Payer/Receiver Columns -->
+              <div class="flex items-center gap-8 md:gap-12 shrink-0 ml-4">
+                <!-- Who paid -->
+                <div v-if="activity.type === 'expense'" class="hidden sm:block text-right w-24">
+                  <p class="text-[10px] font-bold text-gray-400 uppercase leading-none mb-0.5">
+                    {{ activity.paidBy?.id === currentUserId ? 'You' : activity.paidBy?.name.split(' ')[0] }} paid
+                  </p>
+                  <p class="text-sm font-bold text-gray-800">{{ formatCurrency(activity.amount) }}</p>
+                </div>
 
-            <!-- Debt Context -->
-            <div class="text-right w-28">
-              <template v-if="getExpenseDebtContext(activity).amount">
-                <p class="text-[10px] font-bold uppercase tracking-tight text-gray-400 leading-none mb-0.5">
-                  {{ getExpenseDebtContext(activity).label }}
-                </p>
-                <p :class="['text-sm font-bold', getExpenseDebtContext(activity).class]">
-                  {{ getExpenseDebtContext(activity).amount }}
-                </p>
-              </template>
-              <template v-else>
-                  <p class="text-xs italic text-gray-300">not involved</p>
-              </template>
+                <!-- Debt Context -->
+                <div class="text-right w-28">
+                  <template v-if="getExpenseDebtContext(activity).amount">
+                    <p class="text-[10px] font-bold uppercase tracking-tight text-gray-400 leading-none mb-0.5">
+                      {{ getExpenseDebtContext(activity).label }}
+                    </p>
+                    <p :class="['text-sm font-bold', getExpenseDebtContext(activity).class]">
+                      {{ getExpenseDebtContext(activity).amount }}
+                    </p>
+                  </template>
+                  <template v-else>
+                      <p class="text-xs italic text-gray-300">not involved</p>
+                  </template>
+                </div>
+              </div>
             </div>
-            
-            <ChevronRight class="h-4 w-4 text-gray-300 group-hover:text-gray-400" />
-          </div>
-        </div>
+          </template>
+        </TransactionItem>
       </div>
     </div>
   </div>

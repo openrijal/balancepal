@@ -38,9 +38,15 @@ export interface SharedExpense {
     groupName: string;
     paidByUserId: string;
     paidByName: string;
+    paidBy?: { id: string; name: string };
     category: string;
     userSplit?: string;
     friendSplit?: string;
+    splits?: {
+        userId: string;
+        user: { id: string; name: string };
+        amount: string;
+    }[];
 }
 
 export interface FriendListItem {
@@ -297,9 +303,15 @@ export class FriendsService {
                     groupName: exp.group.name,
                     paidByUserId: exp.paidByUserId,
                     paidByName: exp.paidBy.name,
+                    paidBy: { id: exp.paidBy.id, name: exp.paidBy.name },
                     category: exp.category,
                     userSplit: userSplit?.amount,
                     friendSplit: friendSplit?.amount,
+                    splits: exp.splits.map(s => ({
+                        userId: s.userId,
+                        user: { id: s.user.id, name: s.user.name },
+                        amount: s.amount
+                    }))
                 });
             }
         }

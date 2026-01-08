@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { 
-  User, 
   Receipt, 
   Utensils, 
   Car, 
   Gamepad2, 
   Lightbulb, 
-  ShoppingBag, 
-  MoreHorizontal,
-  Camera
+  ShoppingBag,
 } from 'lucide-vue-next';
+import TransactionItem from './TransactionItem.vue';
 
 interface Expense {
   id: string;
@@ -24,8 +22,11 @@ interface Expense {
   };
   splits: {
     userId: string;
+    user: { id: string; name: string };
     amount: number | string;
   }[];
+  updatedAt?: string;
+  receiptUrl?: string;
 }
 
 const props = defineProps<{
@@ -129,52 +130,57 @@ const getExpenseContext = (expense: Expense) => {
     </div>
 
     <div v-else v-for="group in groupedExpenses" :key="group.monthYear" class="space-y-4">
-      <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100 pb-2">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100 pb-2 px-1">
         {{ group.monthYear }}
       </h3>
       
-      <div class="divide-y divide-gray-50 overflow-hidden rounded-xl border bg-white shadow-sm">
-        <div 
+      <div class="overflow-hidden rounded-xl border bg-white shadow-sm divide-y divide-gray-50">
+        <TransactionItem 
           v-for="expense in group.items" 
           :key="expense.id"
-          class="group flex items-center justify-between p-4 transition-colors hover:bg-gray-50"
+          :transaction="{ ...expense, type: 'expense' }"
+          :current-user-id="currentUserId"
         >
-          <div class="flex items-center gap-4">
-            <!-- Date Box -->
-            <div class="flex flex-col items-center justify-center text-center w-10">
-              <span class="text-[10px] font-bold text-gray-400">{{ formatDate(expense.date).month }}</span>
-              <span class="text-xl font-medium text-gray-600 leading-none">{{ formatDate(expense.date).day }}</span>
-            </div>
+          <template #header>
+            <div class="flex items-center justify-between w-full">
+              <div class="flex items-center gap-4">
+                <!-- Date Box -->
+                <div class="flex flex-col items-center justify-center text-center w-10">
+                  <span class="text-[10px] font-bold text-gray-400">{{ formatDate(expense.date).month }}</span>
+                  <span class="text-xl font-medium text-gray-600 leading-none">{{ formatDate(expense.date).day }}</span>
+                </div>
 
-            <!-- Icon -->
-            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 text-gray-400 group-hover:bg-white group-hover:shadow-sm transition-all border border-transparent group-hover:border-gray-100">
-              <component :is="getCategoryIcon(expense.category)" class="h-5 w-5" />
-            </div>
+                <!-- Icon -->
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 text-gray-400 group-hover:bg-white group-hover:shadow-sm transition-all border border-transparent group-hover:border-gray-100">
+                  <component :is="getCategoryIcon(expense.category)" class="h-5 w-5" />
+                </div>
 
-            <div>
-              <h4 class="font-medium text-gray-900">{{ expense.description }}</h4>
-              <p class="text-xs text-gray-500">
-                <span v-if="expense.paidBy.id === currentUserId">You</span>
-                <span v-else>{{ expense.paidBy.name }}</span>
-                paid <span class="font-semibold text-gray-700">{{ formatCurrency(expense.amount) }}</span>
-              </p>
-            </div>
-          </div>
+                <div>
+                  <h4 class="font-medium text-gray-900 leading-tight">{{ expense.description }}</h4>
+                  <p class="text-xs text-gray-500">
+                    <span v-if="expense.paidBy.id === currentUserId">You</span>
+                    <span v-else>{{ expense.paidBy.name }}</span>
+                    paid <span class="font-semibold text-gray-700">{{ formatCurrency(expense.amount) }}</span>
+                  </p>
+                </div>
+              </div>
 
-          <div class="text-right">
-            <template v-if="getExpenseContext(expense).amount">
-              <p class="text-[10px] font-bold uppercase tracking-tight text-gray-400 leading-tight">
-                {{ getExpenseContext(expense).label }}
-              </p>
-              <p :class="['text-sm font-bold', getExpenseContext(expense).class]">
-                {{ getExpenseContext(expense).amount }}
-              </p>
-            </template>
-            <template v-else>
-                <p class="text-xs italic text-gray-300">not involved</p>
-            </template>
-          </div>
-        </div>
+              <div class="text-right">
+                <template v-if="getExpenseContext(expense).amount">
+                  <p class="text-[10px] font-bold uppercase tracking-tight text-gray-400 leading-tight">
+                    {{ getExpenseContext(expense).label }}
+                  </p>
+                  <p :class="['text-sm font-bold', getExpenseContext(expense).class]">
+                    {{ getExpenseContext(expense).amount }}
+                  </p>
+                </template>
+                <template v-else>
+                    <p class="text-xs italic text-gray-300">not involved</p>
+                </template>
+              </div>
+            </div>
+          </template>
+        </TransactionItem>
       </div>
     </div>
   </div>

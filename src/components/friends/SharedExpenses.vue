@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { Receipt, RefreshCw, ChevronDown } from 'lucide-vue-next';
+import { ref, onMounted } from 'vue';
+import { Receipt, RefreshCw } from 'lucide-vue-next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { SharedExpense } from '@/types';
+import TransactionItem from '../expenses/TransactionItem.vue';
 
 interface Props {
   friendId: string;
@@ -13,7 +13,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const expenses = ref<SharedExpense[]>([]);
+const expenses = ref<any[]>([]);
 const loading = ref(true);
 const loadingMore = ref(false);
 const error = ref<string | null>(null);
@@ -122,42 +122,38 @@ onMounted(() => {
       </div>
 
       <!-- Expenses List -->
-      <div v-else class="space-y-3">
-        <div
-          v-for="expense in expenses"
-          :key="expense.id"
-          class="p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
-        >
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="text-lg">{{ categoryIcons[expense.category] || '📦' }}</span>
-                <p class="font-medium text-gray-900 truncate">{{ expense.description }}</p>
-              </div>
-              <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                <a :href="`/groups/${expense.groupId}`" class="hover:text-primary-600">
-                  {{ expense.groupName }}
-                </a>
-                <span>•</span>
-                <span>{{ formatDate(expense.date) }}</span>
-              </div>
-            </div>
-            <div class="text-right">
-              <p class="font-semibold text-gray-900">{{ formatCurrency(expense.amount) }}</p>
-              <p class="text-xs text-gray-500">
-                {{ expense.paidByUserId === currentUserId ? 'You' : expense.paidByName }} paid
-              </p>
-            </div>
-          </div>
-
-          <!-- Split details -->
-          <div
-            v-if="expense.userSplit || expense.friendSplit"
-            class="mt-2 pt-2 border-t border-gray-100 flex justify-between text-xs text-gray-500"
+      <div v-else class="space-y-4">
+        <div class="divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+          <TransactionItem
+            v-for="expense in expenses"
+            :key="expense.id"
+            :transaction="{ ...expense, type: 'expense' }"
+            :current-user-id="currentUserId"
           >
-            <span v-if="expense.userSplit">Your share: {{ formatCurrency(expense.userSplit) }}</span>
-            <span v-if="expense.friendSplit">{{ friendName }}'s share: {{ formatCurrency(expense.friendSplit) }}</span>
-          </div>
+            <template #header>
+              <div class="flex items-start justify-between gap-3 w-full">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="text-lg">{{ categoryIcons[expense.category] || '📦' }}</span>
+                    <p class="font-bold text-gray-900 truncate">{{ expense.description }}</p>
+                  </div>
+                  <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                    <span class="font-bold text-sky-600">
+                      {{ expense.groupName }}
+                    </span>
+                    <span>•</span>
+                    <span>{{ formatDate(expense.date) }}</span>
+                  </div>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="font-bold text-gray-900 text-sm">{{ formatCurrency(expense.amount) }}</p>
+                  <p class="text-[10px] uppercase font-black text-gray-400 leading-none mt-0.5">
+                    {{ expense.paidByUserId === currentUserId ? 'You' : expense.paidByName.split(' ')[0] }} paid
+                  </p>
+                </div>
+              </div>
+            </template>
+          </TransactionItem>
         </div>
 
         <!-- Load More Button -->

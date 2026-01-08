@@ -17,8 +17,11 @@ interface Expense {
   };
   splits: {
     userId: string;
+    user: { id: string; name: string };
     amount: number | string;
   }[];
+  updatedAt?: string;
+  receiptUrl?: string;
 }
 
 const props = defineProps<{
