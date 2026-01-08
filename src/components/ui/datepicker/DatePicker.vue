@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Calendar } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -10,6 +10,12 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
 }>();
+
+const dateInputRef = ref<HTMLInputElement | null>(null);
+
+const openDatePicker = () => {
+  dateInputRef.value?.showPicker();
+};
 
 const formattedDate = computed(() => {
   if (!props.modelValue) return props.placeholder || 'Select date';
@@ -28,15 +34,20 @@ const handleChange = (e: Event) => {
 
 <template>
   <div class="relative inline-block">
-    <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+    <button 
+      type="button"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+      @click="openDatePicker"
+    >
       <Calendar class="h-4 w-4 text-gray-400" />
       <span>{{ formattedDate }}</span>
-      <input 
-        type="date"
-        :value="modelValue"
-        @change="handleChange"
-        class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-      />
-    </label>
+    </button>
+    <input 
+      ref="dateInputRef"
+      type="date"
+      :value="modelValue"
+      @change="handleChange"
+      class="sr-only"
+    />
   </div>
 </template>

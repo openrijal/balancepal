@@ -3,10 +3,12 @@ import { ref, computed, watch } from 'vue';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from 'reka-ui';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/datepicker';
 import { ArrowRight, Loader2, Handshake, ChevronDown } from 'lucide-vue-next';
@@ -64,11 +66,23 @@ const currentUserBalance = computed(() =>
   memberBalances.value.find(mb => mb.userId === props.currentUserId)?.balance || 0
 );
 
+// Track the last stable width to prevent flickering during edits
+const lastStableWidth = ref(128); // Default width for "0.00"
+
 // Dynamic width for amount input based on character length
 const inputWidth = computed(() => {
-  const len = amount.value.length || 4; // Default to 4 for placeholder "0.00"
-  // Each character is roughly 30px at text-5xl, minimum 80px
-  return Math.max(80, len * 32) + 'px';
+  const valueStr = String(amount.value);
+  const len = valueStr.length;
+  
+  if (len > 0) {
+    // Each character is roughly 32px at text-5xl, minimum 80px
+    const calculatedWidth = Math.max(80, len * 32);
+    lastStableWidth.value = calculatedWidth;
+    return calculatedWidth + 'px';
+  }
+  
+  // When empty, use last stable width to prevent flicker
+  return lastStableWidth.value + 'px';
 });
 
 const getInitials = (name: string) => name.charAt(0).toUpperCase();
@@ -197,6 +211,9 @@ async function handleSubmit() {
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
         <DialogTitle class="text-xl font-bold text-gray-900">Settle up</DialogTitle>
+        <VisuallyHidden as-child>
+          <DialogDescription>Record a payment between group members</DialogDescription>
+        </VisuallyHidden>
       </DialogHeader>
 
       <div class="py-6 space-y-6">
@@ -289,7 +306,7 @@ async function handleSubmit() {
               min="0"
               placeholder="0.00"
               :style="{ width: inputWidth }"
-              class="text-5xl font-bold text-gray-900 text-center bg-transparent border-b-2 border-dashed border-gray-200 focus:border-primary-500 outline-none transition-all"
+              class="text-5xl font-bold text-gray-900 text-center bg-transparent border-b-2 border-dashed border-gray-200 focus:border-primary-500 outline-none transition-colors"
             />
           </div>
         </div>
