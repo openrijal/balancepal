@@ -1,8 +1,7 @@
 import type { APIRoute } from 'astro';
 import { GroupService } from '@/services/groups';
-import { supabase } from '@/lib/supabase';
 
-export const POST: APIRoute = async ({ request, cookies, params }) => {
+export const POST: APIRoute = async ({ request, params, locals }) => {
     try {
         const { id: groupId } = params;
 
@@ -10,18 +9,8 @@ export const POST: APIRoute = async ({ request, cookies, params }) => {
             return new Response(JSON.stringify({ error: 'Group ID required' }), { status: 400 });
         }
 
-        const accessToken = cookies.get('sb-access-token')?.value;
-        const refreshToken = cookies.get('sb-refresh-token')?.value;
-
-        if (!accessToken || !refreshToken) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-        }
-
-        const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-
-        if (authError || !user) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-        }
+        // User is attached by middleware (401 already handled by middleware)
+        const user = locals.user!;
 
         const body = await request.json();
 

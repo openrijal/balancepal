@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { createSupabaseServerClient } from '@/lib/auth';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
     const { access_token, refresh_token } = await request.json();
@@ -7,19 +8,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         return new Response('Missing tokens', { status: 400 });
     }
 
-    cookies.set('sb-access-token', access_token, {
-        path: '/',
-        secure: true,
-        httpOnly: true,
-        sameSite: 'lax',
+    // Use SSR client to set session - this sets cookies in the correct format
+    // that the middleware expects (sb-<project-ref>-auth-token pattern)
+    const supabase = createSupabaseServerClient(cookies);
+    const { error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
     });
 
-    cookies.set('sb-refresh-token', refresh_token, {
-        path: '/',
-        secure: true,
-        httpOnly: true,
-        sameSite: 'lax',
-    });
+    if (error) {
+        console.error('Error setting session:', error.message);
+        return new Response('Failed to set session', { status: 500 });
+    }
 
     return new Response('Signed in', { status: 200 });
 };

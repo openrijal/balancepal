@@ -1,11 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { supabase } from '@/lib/supabase';
 
-const accessToken = Astro.cookies.get('sb-access-token')?.value;
-const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
-
-if (accessToken && refreshToken) {
+// User is attached by middleware - redirect if authenticated
+const user = Astro.locals.user;
+if (user) {
   return Astro.redirect('/dashboard');
 }
 ---

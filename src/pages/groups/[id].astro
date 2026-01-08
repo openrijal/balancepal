@@ -3,7 +3,6 @@ import AppLayout from '@/layouts/AppLayout.astro';
 import GroupHeader from '@/components/groups/GroupHeader.vue';
 import { GroupService } from '@/services/groups';
 import { ExpenseService } from '@/services/expenses';
-import { supabase } from '@/lib/supabase';
 import ExpensesContainer from '@/components/expenses/ExpensesContainer.vue';
 import GroupMemberBalances from '@/components/groups/GroupMemberBalances.vue';
 import InviteMemberDialog from '@/components/groups/InviteMemberDialog.vue';
@@ -19,21 +18,8 @@ if (!id || !uuidRegex.test(id)) {
   });
 }
 
-const accessToken = Astro.cookies.get('sb-access-token')?.value;
-const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
-
-if (!accessToken || !refreshToken) {
-  return Astro.redirect('/login');
-}
-
-const {
-  data: { user },
-  error,
-} = await supabase.auth.getUser(accessToken);
-
-if (error || !user) {
-  return Astro.redirect('/login');
-}
+// User is attached by middleware (already authenticated by middleware)
+const user = Astro.locals.user!;
 
 const group = await GroupService.getGroupDetails(id);
 

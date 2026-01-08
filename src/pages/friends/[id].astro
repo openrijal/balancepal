@@ -5,7 +5,6 @@ import FriendBalanceSummary from '@/components/friends/FriendBalanceSummary.vue'
 import SharedGroups from '@/components/friends/SharedGroups.vue';
 import SharedExpenses from '@/components/friends/SharedExpenses.vue';
 import { FriendsService } from '@/services/friends';
-import { supabase } from '@/lib/supabase';
 
 const { id } = Astro.params;
 
@@ -18,21 +17,8 @@ if (!id || !uuidRegex.test(id)) {
   });
 }
 
-const accessToken = Astro.cookies.get('sb-access-token')?.value;
-const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
-
-if (!accessToken || !refreshToken) {
-  return Astro.redirect('/login');
-}
-
-const {
-  data: { user },
-  error,
-} = await supabase.auth.getUser(accessToken);
-
-if (error || !user) {
-  return Astro.redirect('/login');
-}
+// User is attached by middleware (already authenticated by middleware)
+const user = Astro.locals.user!;
 
 const friend = await FriendsService.getFriendDetails(user.id, id);
 

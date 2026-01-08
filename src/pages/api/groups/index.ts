@@ -1,21 +1,10 @@
 import type { APIRoute } from 'astro';
 import { GroupService } from '@/services/groups';
-import { supabase } from '@/lib/supabase';
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
     try {
-        const accessToken = cookies.get('sb-access-token')?.value;
-        const refreshToken = cookies.get('sb-refresh-token')?.value;
-
-        if (!accessToken || !refreshToken) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-        }
-
-        const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-
-        if (authError || !user) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-        }
+        // User is attached by middleware (401 already handled by middleware)
+        const user = locals.user!;
 
         const body = await request.json();
 
@@ -37,24 +26,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 };
 
-export const GET: APIRoute = async ({ cookies }) => {
+export const GET: APIRoute = async ({ locals }) => {
     try {
-        const accessToken = cookies.get('sb-access-token')?.value;
-        const refreshToken = cookies.get('sb-refresh-token')?.value;
-
-        if (!accessToken || !refreshToken) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-        }
-
-        // Set session with tokens to enable proper auth
-        const { data: { user }, error: authError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-        });
-
-        if (authError || !user) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-        }
+        // User is attached by middleware (401 already handled by middleware)
+        const user = locals.user!;
 
         const groups = await GroupService.getUserGroups(user.id);
 
@@ -65,3 +40,4 @@ export const GET: APIRoute = async ({ cookies }) => {
         return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
     }
 }
+

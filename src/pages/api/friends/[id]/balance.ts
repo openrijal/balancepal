@@ -1,10 +1,9 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '@/lib/supabase';
 import { FriendsService } from '@/services/friends';
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const GET: APIRoute = async ({ cookies, params }) => {
+export const GET: APIRoute = async ({ params, locals }) => {
     const { id: friendId } = params;
 
     if (!friendId || !uuidRegex.test(friendId)) {
@@ -14,27 +13,8 @@ export const GET: APIRoute = async ({ cookies, params }) => {
         });
     }
 
-    const accessToken = cookies.get('sb-access-token')?.value;
-    const refreshToken = cookies.get('sb-refresh-token')?.value;
-
-    if (!accessToken || !refreshToken) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-            status: 401,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    }
-
-    const { data: { user }, error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-    });
-
-    if (error || !user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-            status: 401,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    }
+    // User is attached by middleware (401 already handled by middleware)
+    const user = locals.user!;
 
     try {
         const balance = await FriendsService.getFriendBalance(user.id, friendId);
