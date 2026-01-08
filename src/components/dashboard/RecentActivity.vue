@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
-import { Clock, ArrowRight, Receipt, CreditCard, Filter } from 'lucide-vue-next';
+import { Clock, ArrowRight, Receipt, CreditCard, Filter, Trash2 } from 'lucide-vue-next';
 import GroupFilter from './GroupFilter.vue';
 
 interface Group {
@@ -21,6 +21,11 @@ interface ActivityItem {
     name: string;
   };
   recipient?: {
+    id: string;
+    name: string;
+  };
+  isDeleted?: boolean;
+  deletedBy?: {
     id: string;
     name: string;
   };
@@ -99,6 +104,14 @@ async function fetchActivity() {
 const getActivityDescription = (activity: ActivityItem) => {
   const userName = activity.user.id === props.currentUserId ? 'You' : activity.user.name;
   
+  if (activity.isDeleted) {
+    const deleterName = activity.deletedBy?.id === props.currentUserId ? 'You' : (activity.deletedBy?.name || 'Someone');
+    if (props.groupId) {
+      return `${deleterName} deleted "${activity.description}"`;
+    }
+    return `${deleterName} deleted "${activity.description}" in "${activity.groupName}"`;
+  }
+
   if (activity.type === 'expense') {
     if (props.groupId) {
       // Compact mode - don't show group name
@@ -158,10 +171,12 @@ onMounted(fetchActivity);
         <div
           :class="[
             'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border',
+            activity.isDeleted ? 'bg-red-50 border-red-100 text-red-600' :
             activity.type === 'expense' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-orange-50 border-orange-100 text-orange-600'
           ]"
         >
-          <Receipt v-if="activity.type === 'expense'" class="h-5 w-5" />
+          <Trash2 v-if="activity.isDeleted" class="h-5 w-5" />
+          <Receipt v-else-if="activity.type === 'expense'" class="h-5 w-5" />
           <CreditCard v-else class="h-5 w-5" />
         </div>
         
@@ -173,9 +188,10 @@ onMounted(fetchActivity);
           <div class="mt-1 flex items-center justify-between">
             <span :class="[
               'text-[11px] font-bold uppercase tracking-tight',
+              activity.isDeleted ? 'text-red-600' :
               activity.type === 'expense' ? 'text-emerald-600' : 'text-orange-600'
             ]">
-              {{ activity.type === 'expense' ? 'Added' : 'Payment' }} · {{ formatCurrency(activity.amount) }}
+              {{ activity.isDeleted ? 'Deleted' : (activity.type === 'expense' ? 'Added' : 'Payment') }} · {{ formatCurrency(activity.amount) }}
             </span>
             <span class="text-[10px] text-gray-400 font-medium">{{ formatDate(activity.date) }}</span>
           </div>

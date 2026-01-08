@@ -1,7 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ChevronRight } from 'lucide-vue-next';
+import { ChevronRight, Trash2, Loader2 } from 'lucide-vue-next';
 import TransactionDetailContent from './TransactionDetailContent.vue';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogClose 
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { toast } from 'vue-sonner';
 
 interface Expense {
   id: string;
@@ -34,9 +45,37 @@ const props = defineProps<{
 }>();
 
 const isExpanded = ref(false);
+const isDeleting = ref(false);
+const showDeleteConfirm = ref(false);
 
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value;
+};
+
+const handleDelete = async () => {
+  isDeleting.value = true;
+  try {
+    const res = await fetch(`/api/expenses/${props.transaction.id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    
+    if (res.ok) {
+      toast.success('Transaction deleted');
+      // Simple approach: refresh the page to update all balances and lists
+      // In a more complex app, we'd use a store or event bus
+      window.location.reload();
+    } else {
+      const error = await res.json();
+      toast.error(error.error || 'Failed to delete transaction');
+    }
+  } catch (e) {
+    console.error('Delete failed', e);
+    toast.error('An unexpected error occurred');
+  } finally {
+    isDeleting.value = false;
+    showDeleteConfirm.value = false;
+  }
 };
 </script>
 
@@ -61,7 +100,46 @@ const toggleExpand = () => {
           </div>
         </div>
       </slot>
+
+      <!-- Delete Action (Hover/Selected) -->
+      <div 
+        class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+        @click.stop
+      >
+        <button 
+          @click="showDeleteConfirm = true"
+          class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+          title="Delete transaction"
+        >
+          <Trash2 class="h-4 w-4" />
+        </button>
+      </div>
     </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <Dialog v-model:open="showDeleteConfirm">
+      <DialogContent class="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Delete Transaction</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete "{{ transaction.description }}"? This will remove it from group balances and record the deletion in activity.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter class="mt-6 flex gap-2">
+          <DialogClose as-child>
+            <Button variant="outline" :disabled="isDeleting">Cancel</Button>
+          </DialogClose>
+          <Button 
+            variant="destructive" 
+            :disabled="isDeleting"
+            @click="handleDelete"
+          >
+            <Loader2 v-if="isDeleting" class="mr-2 h-4 w-4 animate-spin" />
+            {{ isDeleting ? 'Deleting...' : 'Delete' }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
     <!-- Content -->
     <div 

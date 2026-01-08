@@ -19,6 +19,11 @@ interface ActivityItem {
         id: string;
         name: string;
     };
+    isDeleted?: boolean;
+    deletedBy?: {
+        id: string;
+        name: string;
+    };
 }
 
 export const GET: APIRoute = async ({ locals, request }) => {
@@ -47,7 +52,7 @@ export const GET: APIRoute = async ({ locals, request }) => {
 
         for (const group of groupsToProcess) {
             const [expenses, settlements] = await Promise.all([
-                ExpenseService.getGroupExpenses(group.id),
+                ExpenseService.getGroupExpenses(group.id, true), // includeDeleted = true
                 SettlementService.getGroupSettlements(group.id),
             ]);
 
@@ -58,13 +63,18 @@ export const GET: APIRoute = async ({ locals, request }) => {
                     type: 'expense',
                     description: expense.description,
                     amount: parseFloat(expense.amount),
-                    date: expense.date.toISOString(),
                     groupId: group.id,
                     groupName: group.name,
                     user: {
                         id: expense.paidBy?.id || '',
                         name: expense.paidBy?.name || 'Unknown',
                     },
+                    isDeleted: !!expense.deletedAt,
+                    date: (expense.deletedAt || expense.date).toISOString(), // Sort by deletion date if deleted
+                    deletedBy: expense.deletedAt ? {
+                        id: expense.deletedByUserId || '',
+                        name: 'Someone', // Could fetch name if needed, keeping it simple for now
+                    } : undefined,
                 });
             }
 

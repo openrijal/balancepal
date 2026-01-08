@@ -121,6 +121,8 @@ export const expenses = pgTable(
     date: timestamp('date', { withTimezone: true }).notNull(),
     category: expenseCategoryEnum('category').default('other').notNull(),
     notes: text('notes'),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    deletedByUserId: uuid('deleted_by_user_id').references(() => profiles.id),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },

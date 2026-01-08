@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { expenses, expenseSplits, groupMembers, profiles } from '@/db/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, isNull } from 'drizzle-orm';
 
 export interface CreateExpenseData {
     amount: number;
@@ -56,10 +56,14 @@ export class ExpenseService {
         });
     }
 
-    static async getGroupExpenses(groupId: string) {
+    static async getGroupExpenses(groupId: string, includeDeleted = false) {
         // Fetch expenses with the payer's profile information
+        const whereClause = includeDeleted
+            ? eq(expenses.groupId, groupId)
+            : and(eq(expenses.groupId, groupId), isNull(expenses.deletedAt));
+
         return await db.query.expenses.findMany({
-            where: eq(expenses.groupId, groupId),
+            where: whereClause,
             with: {
                 paidBy: true, // Relation to profile
                 splits: {
@@ -70,5 +74,17 @@ export class ExpenseService {
             },
             orderBy: [desc(expenses.date)]
         });
+    }
+
+    static async deleteExpense(expenseId: string, userId: string) {
+        return await db
+            .update(expenses)
+            .set({
+                deletedAt: new Date(),
+                deletedByUserId: userId,
+                updatedAt: new Date(),
+            })
+            .where(eq(expenses.id, expenseId))
+            .returning();
     }
 }
