@@ -15,12 +15,12 @@ export function getSupabaseBrowserClient(supabaseUrl: string, supabaseAnonKey: s
     browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         get(key) {
-          console.log('[BrowserAuth] Getting cookie:', key);
+          if (typeof document === 'undefined') return '';
           const match = document.cookie.match(new RegExp('(^| )' + key + '=([^;]+)'));
           return match ? match[2] : '';
         },
         set(key, value, options) {
-          console.log('[BrowserAuth] Setting cookie:', key, value, options);
+          if (typeof document === 'undefined') return;
           let cookieStr = `${key}=${value}`;
           // Add default options if they are simple props,
           // but @supabase/ssr passes options object that maps to cookie attributes
@@ -37,7 +37,7 @@ export function getSupabaseBrowserClient(supabaseUrl: string, supabaseAnonKey: s
           document.cookie = cookieStr;
         },
         remove(key, options) {
-          console.log('[BrowserAuth] Removing cookie:', key);
+          if (typeof document === 'undefined') return;
           document.cookie = `${key}=; max-age=0${options?.path ? `; path=${options.path}` : '; path=/'}`;
         },
       },

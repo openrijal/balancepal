@@ -54,17 +54,6 @@ export function createSupabaseServerClient(cookies: AstroCookies) {
         allCookies.push(...authCookies);
         allCookies.push(...verifierCookies);
 
-        // Debug logging
-        if (authCookies.length > 0) {
-          console.log(`[Auth] Auth token found with ${authCookies.length} chunks`);
-        } else {
-          console.log(`[Auth] Auth token MISSING: ${authTokenName}`);
-        }
-
-        if (verifierCookies.length > 0) {
-          console.log(`[Auth] Code verifier found with ${verifierCookies.length} chunks`);
-        }
-
         return allCookies;
       },
       setAll(cookiesToSet) {
