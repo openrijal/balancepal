@@ -13,8 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-vue-next';
 
 interface User {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 const props = defineProps<{
@@ -34,9 +34,13 @@ const amount = ref('');
 const error = ref<string | null>(null);
 
 // Update amount when defaultAmount changes or dialog opens
-watch(() => props.defaultAmount, (val) => {
+watch(
+  () => props.defaultAmount,
+  (val) => {
     if (val) amount.value = val.toString();
-}, { immediate: true });
+  },
+  { immediate: true }
+);
 
 async function handleSettle() {
   if (!props.recipient || !amount.value) return;
@@ -51,7 +55,7 @@ async function handleSettle() {
       body: JSON.stringify({
         toUserId: props.recipient.id,
         amount: parseFloat(amount.value),
-        paymentMethod: 'cash' // Default for now
+        paymentMethod: 'cash', // Default for now
       }),
     });
 
@@ -75,29 +79,25 @@ async function handleSettle() {
     <DialogContent class="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle>Settle Up</DialogTitle>
-        <DialogDescription>
-            Record a payment to {{ recipient?.name }}.
-        </DialogDescription>
+        <DialogDescription> Record a payment to {{ recipient?.name }}. </DialogDescription>
       </DialogHeader>
 
       <div class="grid gap-4 py-4">
         <div v-if="error" class="text-sm text-red-500">{{ error }}</div>
 
         <div class="grid grid-cols-4 items-center gap-4">
-          <label for="amount" class="text-right text-sm font-medium">
-            Amount
-          </label>
+          <label for="amount" class="text-right text-sm font-medium"> Amount </label>
           <div class="relative col-span-3">
-             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-             <Input
-                id="amount"
-                v-model="amount"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                class="pl-7"
-                required
+            <span class="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">$</span>
+            <Input
+              id="amount"
+              v-model="amount"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              class="pl-7"
+              required
             />
           </div>
         </div>
@@ -105,9 +105,9 @@ async function handleSettle() {
 
       <DialogFooter>
         <Button variant="secondary" @click="open = false">Cancel</Button>
-        <Button @click="handleSettle" :disabled="loading">
-            <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
-            Pay {{ recipient?.name }}
+        <Button :disabled="loading" @click="handleSettle">
+          <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
+          Pay {{ recipient?.name }}
         </Button>
       </DialogFooter>
     </DialogContent>

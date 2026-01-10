@@ -54,16 +54,16 @@ const selectedDate = ref(new Date().toISOString().split('T')[0]); // Today in YY
 const showPayerDropdown = ref(false);
 const showReceiverDropdown = ref(false);
 
-const payer = computed(() => props.members.find(m => m.id === payerId.value));
-const receiver = computed(() => props.members.find(m => m.id === receiverId.value));
+const payer = computed(() => props.members.find((m) => m.id === payerId.value));
+const receiver = computed(() => props.members.find((m) => m.id === receiverId.value));
 
 // Members excluding current payer
-const otherMembers = computed(() => props.members.filter(m => m.id !== payerId.value));
+const otherMembers = computed(() => props.members.filter((m) => m.id !== payerId.value));
 const payableMembers = computed(() => props.members);
 
 // Get balance for current user
-const currentUserBalance = computed(() => 
-  memberBalances.value.find(mb => mb.userId === props.currentUserId)?.balance || 0
+const currentUserBalance = computed(
+  () => memberBalances.value.find((mb) => mb.userId === props.currentUserId)?.balance || 0
 );
 
 // Track the last stable width to prevent flickering during edits
@@ -73,14 +73,14 @@ const lastStableWidth = ref(128); // Default width for "0.00"
 const inputWidth = computed(() => {
   const valueStr = String(amount.value);
   const len = valueStr.length;
-  
+
   if (len > 0) {
     // Each character is roughly 32px at text-5xl, minimum 80px
     const calculatedWidth = Math.max(80, len * 32);
     lastStableWidth.value = calculatedWidth;
     return calculatedWidth + 'px';
   }
-  
+
   // When empty, use last stable width to prevent flicker
   return lastStableWidth.value + 'px';
 });
@@ -102,11 +102,11 @@ const selectReceiver = (id: string) => {
 
 // Calculate suggested amount based on who is paying whom
 const updateAmountFromBalances = () => {
-  const payerBal = memberBalances.value.find(mb => mb.userId === payerId.value);
-  const receiverBal = memberBalances.value.find(mb => mb.userId === receiverId.value);
-  
+  const payerBal = memberBalances.value.find((mb) => mb.userId === payerId.value);
+  const receiverBal = memberBalances.value.find((mb) => mb.userId === receiverId.value);
+
   if (!payerBal || !receiverBal) return;
-  
+
   // If payer has negative balance (owes money) and receiver has positive balance (is owed)
   // The suggested amount is the minimum of what payer owes and what receiver is owed
   if (payerBal.balance < 0 && receiverBal.balance > 0) {
@@ -121,22 +121,28 @@ const updateAmountFromBalances = () => {
 async function fetchBalances() {
   loadingBalances.value = true;
   try {
-    const res = await fetch(`/api/groups/${props.groupId}/member-balances`, { credentials: 'include' });
+    const res = await fetch(`/api/groups/${props.groupId}/member-balances`, {
+      credentials: 'include',
+    });
     if (res.ok) {
       memberBalances.value = await res.json();
-      
+
       // Determine initial payer/receiver based on current user's balance
-      const myBalance = memberBalances.value.find(mb => mb.userId === props.currentUserId);
-      
+      const myBalance = memberBalances.value.find((mb) => mb.userId === props.currentUserId);
+
       if (myBalance) {
         if (myBalance.balance < 0) {
           // I owe money → I'm the payer. Find someone with positive balance.
           payerId.value = props.currentUserId;
-          const creditor = memberBalances.value.find(mb => mb.balance > 0 && mb.userId !== props.currentUserId);
+          const creditor = memberBalances.value.find(
+            (mb) => mb.balance > 0 && mb.userId !== props.currentUserId
+          );
           receiverId.value = creditor?.userId || otherMembers.value[0]?.id || '';
         } else if (myBalance.balance > 0) {
           // I'm owed money → Someone else is the payer. I'm the receiver.
-          const debtor = memberBalances.value.find(mb => mb.balance < 0 && mb.userId !== props.currentUserId);
+          const debtor = memberBalances.value.find(
+            (mb) => mb.balance < 0 && mb.userId !== props.currentUserId
+          );
           payerId.value = debtor?.userId || props.currentUserId;
           receiverId.value = props.currentUserId;
         } else {
@@ -145,7 +151,7 @@ async function fetchBalances() {
           receiverId.value = otherMembers.value[0]?.id || '';
         }
       }
-      
+
       updateAmountFromBalances();
     }
   } catch (e) {
@@ -203,7 +209,11 @@ async function handleSubmit() {
 
 <template>
   <Dialog v-model:open="open">
-    <Button @click="open = true" variant="outline" class="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50">
+    <Button
+      variant="outline"
+      class="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+      @click="open = true"
+    >
       <Handshake class="h-4 w-4" />
       Settle up
     </Button>
@@ -216,9 +226,9 @@ async function handleSubmit() {
         </VisuallyHidden>
       </DialogHeader>
 
-      <div class="py-6 space-y-6">
+      <div class="space-y-6 py-6">
         <!-- Error -->
-        <div v-if="error" class="text-sm text-red-500 font-medium text-center">
+        <div v-if="error" class="text-center text-sm font-medium text-red-500">
           {{ error }}
         </div>
 
@@ -226,31 +236,37 @@ async function handleSubmit() {
         <div class="flex items-center justify-center gap-4">
           <!-- Payer Avatar & Dropdown -->
           <div class="relative">
-            <button 
+            <button
+              class="flex flex-col items-center gap-2 rounded-xl p-2 transition-colors hover:bg-gray-50"
               @click="showPayerDropdown = !showPayerDropdown"
-              class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
             >
-              <div class="h-16 w-16 rounded-full bg-primary-100 border-2 border-primary-200 flex items-center justify-center text-xl font-bold text-primary-700 shadow-sm">
+              <div
+                class="bg-primary-100 border-primary-200 text-primary-700 flex h-16 w-16 items-center justify-center rounded-full border-2 text-xl font-bold shadow-sm"
+              >
                 {{ payer ? getInitials(payer.name) : '?' }}
               </div>
-              <span class="text-xs font-bold text-gray-600 flex items-center gap-1">
+              <span class="flex items-center gap-1 text-xs font-bold text-gray-600">
                 {{ payer?.id === currentUserId ? 'You' : payer?.name.split(' ')[0] }}
                 <ChevronDown class="h-3 w-3" />
               </span>
             </button>
             <!-- Dropdown -->
-            <div 
-              v-if="showPayerDropdown" 
-              class="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-40 bg-white rounded-lg shadow-lg border z-10 py-1"
+            <div
+              v-if="showPayerDropdown"
+              class="absolute top-full left-1/2 z-10 mt-1 w-40 -translate-x-1/2 rounded-lg border bg-white py-1 shadow-lg"
             >
-              <button 
-                v-for="m in payableMembers" 
+              <button
+                v-for="m in payableMembers"
                 :key="m.id"
-                @click="selectPayer(m.id)"
-                class="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
                 :class="{ 'bg-gray-50 font-semibold': m.id === payerId }"
+                @click="selectPayer(m.id)"
               >
-                <div class="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold">{{ getInitials(m.name) }}</div>
+                <div
+                  class="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-bold"
+                >
+                  {{ getInitials(m.name) }}
+                </div>
                 {{ m.id === currentUserId ? 'You' : m.name }}
               </button>
             </div>
@@ -259,36 +275,42 @@ async function handleSubmit() {
           <!-- Arrow -->
           <div class="flex flex-col items-center gap-1">
             <ArrowRight class="h-6 w-6 text-gray-300" />
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">paid</span>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase">paid</span>
           </div>
 
           <!-- Receiver Avatar & Dropdown -->
           <div class="relative">
-            <button 
+            <button
+              class="flex flex-col items-center gap-2 rounded-xl p-2 transition-colors hover:bg-gray-50"
               @click="showReceiverDropdown = !showReceiverDropdown"
-              class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
             >
-              <div class="h-16 w-16 rounded-full bg-orange-100 border-2 border-orange-200 flex items-center justify-center text-xl font-bold text-orange-700 shadow-sm">
+              <div
+                class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-orange-200 bg-orange-100 text-xl font-bold text-orange-700 shadow-sm"
+              >
                 {{ receiver ? getInitials(receiver.name) : '?' }}
               </div>
-              <span class="text-xs font-bold text-gray-600 flex items-center gap-1">
+              <span class="flex items-center gap-1 text-xs font-bold text-gray-600">
                 {{ receiver?.name.split(' ')[0] || 'Select...' }}
                 <ChevronDown class="h-3 w-3" />
               </span>
             </button>
             <!-- Dropdown -->
-            <div 
-              v-if="showReceiverDropdown" 
-              class="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-40 bg-white rounded-lg shadow-lg border z-10 py-1"
+            <div
+              v-if="showReceiverDropdown"
+              class="absolute top-full left-1/2 z-10 mt-1 w-40 -translate-x-1/2 rounded-lg border bg-white py-1 shadow-lg"
             >
-              <button 
-                v-for="m in otherMembers" 
+              <button
+                v-for="m in otherMembers"
                 :key="m.id"
-                @click="selectReceiver(m.id)"
-                class="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
                 :class="{ 'bg-gray-50 font-semibold': m.id === receiverId }"
+                @click="selectReceiver(m.id)"
               >
-                <div class="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold">{{ getInitials(m.name) }}</div>
+                <div
+                  class="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-bold"
+                >
+                  {{ getInitials(m.name) }}
+                </div>
                 {{ m.name }}
               </button>
             </div>
@@ -299,14 +321,14 @@ async function handleSubmit() {
         <div class="text-center">
           <div class="inline-flex items-baseline gap-1">
             <span class="text-3xl font-bold text-gray-400">$</span>
-            <input 
+            <input
               v-model="amount"
               type="number"
               step="0.01"
               min="0"
               placeholder="0.00"
               :style="{ width: inputWidth }"
-              class="text-5xl font-bold text-gray-900 text-center bg-transparent border-b-2 border-dashed border-gray-200 focus:border-primary-500 outline-none transition-colors"
+              class="focus:border-primary-500 border-b-2 border-dashed border-gray-200 bg-transparent text-center text-5xl font-bold text-gray-900 transition-colors outline-none"
             />
           </div>
         </div>
@@ -318,8 +340,12 @@ async function handleSubmit() {
       </div>
 
       <DialogFooter class="flex gap-2">
-        <Button variant="outline" @click="open = false" class="flex-1">Cancel</Button>
-        <Button @click="handleSubmit" :disabled="loading || !receiverId || !amount" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white">
+        <Button variant="outline" class="flex-1" @click="open = false">Cancel</Button>
+        <Button
+          :disabled="loading || !receiverId || !amount"
+          class="flex-1 bg-emerald-500 text-white hover:bg-emerald-600"
+          @click="handleSubmit"
+        >
           <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
           {{ loading ? 'Saving...' : 'Save' }}
         </Button>

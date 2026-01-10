@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
-import { 
-  Receipt, 
-  Utensils, 
-  Car, 
-  Gamepad2, 
-  Lightbulb, 
+import {
+  Receipt,
+  Utensils,
+  Car,
+  Gamepad2,
+  Lightbulb,
   ShoppingBag,
   CreditCard,
 } from 'lucide-vue-next';
@@ -28,10 +28,10 @@ interface Activity {
   paidBy?: { id: string; name: string };
   fromUser?: { id: string; name: string };
   toUser?: { id: string; name: string };
-  splits?: { 
-    userId: string; 
+  splits?: {
+    userId: string;
     user: { id: string; name: string };
-    amount: string | number 
+    amount: string | number;
   }[];
 }
 
@@ -70,20 +70,26 @@ const formatCurrency = (amount: number | string) => {
 
 const getCategoryIcon = (activity: Activity) => {
   if (activity.type === 'settlement') return CreditCard;
-  
+
   switch (activity.category) {
-    case 'food': return Utensils;
-    case 'transport': return Car;
-    case 'entertainment': return Gamepad2;
-    case 'utilities': return Lightbulb;
-    case 'shopping': return ShoppingBag;
-    default: return Receipt;
+    case 'food':
+      return Utensils;
+    case 'transport':
+      return Car;
+    case 'entertainment':
+      return Gamepad2;
+    case 'utilities':
+      return Lightbulb;
+    case 'shopping':
+      return ShoppingBag;
+    default:
+      return Receipt;
   }
 };
 
 const groupedActivities = computed(() => {
   const groups: Record<string, Activity[]> = {};
-  activities.value.forEach(activity => {
+  activities.value.forEach((activity) => {
     const key = formatMonthYear(activity.date);
     if (!groups[key]) groups[key] = [];
     groups[key].push(activity);
@@ -103,22 +109,26 @@ const getExpenseDebtContext = (activity: Activity) => {
     return {
       label: isPayer ? 'you paid' : 'you received',
       amount: formatCurrency(activity.amount),
-      class: isPayer ? 'text-orange-600' : 'text-emerald-600'
+      class: isPayer ? 'text-orange-600' : 'text-emerald-600',
     };
   }
 
   const isPayer = activity.paidBy?.id === props.currentUserId;
-  const userSplit = activity.splits?.find(s => s.userId === props.currentUserId);
+  const userSplit = activity.splits?.find((s) => s.userId === props.currentUserId);
   const userAmount = userSplit ? Number(userSplit.amount) : 0;
-  
+
   if (isPayer) {
     const othersOwe = Number(activity.amount) - userAmount;
-    return othersOwe > 0 
+    return othersOwe > 0
       ? { label: 'you lent', amount: formatCurrency(othersOwe), class: 'text-emerald-600' }
       : { label: 'you paid', amount: formatCurrency(userAmount), class: 'text-gray-500' };
   } else {
-    return userAmount > 0 
-      ? { label: `${activity.paidBy?.name.split(' ')[0]} lent you`, amount: formatCurrency(userAmount), class: 'text-orange-600' }
+    return userAmount > 0
+      ? {
+          label: `${activity.paidBy?.name.split(' ')[0]} lent you`,
+          amount: formatCurrency(userAmount),
+          class: 'text-orange-600',
+        }
       : { label: 'not involved', amount: '', class: 'text-gray-400' };
   }
 };
@@ -151,54 +161,73 @@ onMounted(fetchActivities);
   <div class="space-y-6">
     <!-- Group Filter -->
     <div v-if="showFilter && groups" class="flex justify-end">
-      <GroupFilter :groups="groups" v-model="selectedGroupIds" />
+      <GroupFilter v-model="selectedGroupIds" :groups="groups" />
     </div>
 
     <div v-if="loading" class="space-y-4">
-      <div v-for="i in 3" :key="i" class="h-20 bg-gray-100 animate-pulse rounded-xl"></div>
+      <div v-for="i in 3" :key="i" class="h-20 animate-pulse rounded-xl bg-gray-100"></div>
     </div>
 
-    <div v-else-if="activities.length === 0" class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
-      <Receipt class="mx-auto h-12 w-12 text-gray-300 mb-4" />
+    <div
+      v-else-if="activities.length === 0"
+      class="rounded-2xl border border-dashed border-gray-200 bg-white py-20 text-center"
+    >
+      <Receipt class="mx-auto mb-4 h-12 w-12 text-gray-300" />
       <p class="text-gray-500">No expenses recorded yet.</p>
     </div>
 
-    <div v-else v-for="group in groupedActivities" :key="group.monthYear" class="space-y-4">
-      <h3 class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2 px-1">
+    <div v-for="group in groupedActivities" v-else :key="group.monthYear" class="space-y-4">
+      <h3 class="mb-2 px-1 text-[10px] font-bold tracking-wider text-gray-400 uppercase">
         {{ group.monthYear }}
       </h3>
-      
-      <div class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-        <TransactionItem 
-          v-for="activity in group.items" 
+
+      <div
+        class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm"
+      >
+        <TransactionItem
+          v-for="activity in group.items"
           :key="activity.id"
           :transaction="activity"
           :current-user-id="currentUserId"
         >
           <template #header>
-            <div class="flex items-center justify-between w-full">
-              <div class="flex items-center gap-4 flex-1 min-w-0">
+            <div class="flex w-full items-center justify-between">
+              <div class="flex min-w-0 flex-1 items-center gap-4">
                 <!-- Date Box -->
-                <div class="flex flex-col items-center justify-center text-center w-10 shrink-0">
-                  <span class="text-[10px] font-bold text-gray-400 tracking-tighter">{{ formatDate(activity.date).month }}</span>
-                  <span class="text-xl font-medium text-gray-600 leading-none">{{ formatDate(activity.date).day }}</span>
+                <div class="flex w-10 shrink-0 flex-col items-center justify-center text-center">
+                  <span class="text-[10px] font-bold tracking-tighter text-gray-400">{{
+                    formatDate(activity.date).month
+                  }}</span>
+                  <span class="text-xl leading-none font-medium text-gray-600">{{
+                    formatDate(activity.date).day
+                  }}</span>
                 </div>
 
                 <!-- Icon -->
-                <div :class="['flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-all', 
-                  activity.type === 'settlement' ? 'bg-orange-50 border-orange-100 text-orange-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600']">
+                <div
+                  :class="[
+                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-all',
+                    activity.type === 'settlement'
+                      ? 'border-orange-100 bg-orange-50 text-orange-600'
+                      : 'border-emerald-100 bg-emerald-50 text-emerald-600',
+                  ]"
+                >
                   <component :is="getCategoryIcon(activity)" class="h-5 w-5" />
                 </div>
 
                 <div class="min-w-0">
                   <template v-if="activity.type === 'settlement'">
-                    <p class="text-[13px] font-medium text-gray-900 leading-snug truncate">
+                    <p class="truncate text-[13px] leading-snug font-medium text-gray-900">
                       {{ getSettlementNarrative(activity) }}
                     </p>
                   </template>
                   <template v-else>
-                    <h4 class="font-bold text-gray-900 leading-none mb-1 truncate">{{ activity.description }}</h4>
-                    <span class="inline-block px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                    <h4 class="mb-1 truncate leading-none font-bold text-gray-900">
+                      {{ activity.description }}
+                    </h4>
+                    <span
+                      class="inline-block rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold tracking-tight text-gray-500 uppercase"
+                    >
                       {{ activity.groupName }}
                     </span>
                   </template>
@@ -206,19 +235,28 @@ onMounted(fetchActivities);
               </div>
 
               <!-- Payer/Receiver Columns -->
-              <div class="flex items-center gap-8 md:gap-12 shrink-0 ml-4">
+              <div class="ml-4 flex shrink-0 items-center gap-8 md:gap-12">
                 <!-- Who paid -->
-                <div v-if="activity.type === 'expense'" class="hidden sm:block text-right w-24">
-                  <p class="text-[10px] font-bold text-gray-400 uppercase leading-none mb-0.5">
-                    {{ activity.paidBy?.id === currentUserId ? 'You' : activity.paidBy?.name.split(' ')[0] }} paid
+                <div v-if="activity.type === 'expense'" class="hidden w-24 text-right sm:block">
+                  <p class="mb-0.5 text-[10px] leading-none font-bold text-gray-400 uppercase">
+                    {{
+                      activity.paidBy?.id === currentUserId
+                        ? 'You'
+                        : activity.paidBy?.name.split(' ')[0]
+                    }}
+                    paid
                   </p>
-                  <p class="text-sm font-bold text-gray-800">{{ formatCurrency(activity.amount) }}</p>
+                  <p class="text-sm font-bold text-gray-800">
+                    {{ formatCurrency(activity.amount) }}
+                  </p>
                 </div>
 
                 <!-- Debt Context -->
-                <div class="text-right w-28">
+                <div class="w-28 text-right">
                   <template v-if="getExpenseDebtContext(activity).amount">
-                    <p class="text-[10px] font-bold uppercase tracking-tight text-gray-400 leading-none mb-0.5">
+                    <p
+                      class="mb-0.5 text-[10px] leading-none font-bold tracking-tight text-gray-400 uppercase"
+                    >
                       {{ getExpenseDebtContext(activity).label }}
                     </p>
                     <p :class="['text-sm font-bold', getExpenseDebtContext(activity).class]">
@@ -226,7 +264,7 @@ onMounted(fetchActivities);
                     </p>
                   </template>
                   <template v-else>
-                      <p class="text-xs italic text-gray-300">not involved</p>
+                    <p class="text-xs text-gray-300 italic">not involved</p>
                   </template>
                 </div>
               </div>

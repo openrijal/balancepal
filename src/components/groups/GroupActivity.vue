@@ -47,20 +47,20 @@ const formatDate = (dateString: string) => {
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
-  
+
   if (diffMins < 1) return 'Just now';
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  
+
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
 async function fetchActivity() {
   loading.value = true;
   try {
-    const res = await fetch(`/api/dashboard/activity?groupIds=${props.groupId}`, { 
-      credentials: 'include' 
+    const res = await fetch(`/api/dashboard/activity?groupIds=${props.groupId}`, {
+      credentials: 'include',
     });
     if (res.ok) {
       const data = await res.json();
@@ -76,16 +76,20 @@ async function fetchActivity() {
 
 const getActivityDescription = (activity: ActivityItem) => {
   const userName = activity.user.id === props.currentUserId ? 'You' : activity.user.name;
-  
+
   if (activity.isDeleted) {
-    const deleterName = activity.deletedBy?.id === props.currentUserId ? 'You' : (activity.deletedBy?.name || 'Someone');
+    const deleterName =
+      activity.deletedBy?.id === props.currentUserId
+        ? 'You'
+        : activity.deletedBy?.name || 'Someone';
     return `${deleterName} deleted "${activity.description}"`;
   }
 
   if (activity.type === 'expense') {
     return `${userName} added "${activity.description}"`;
   } else {
-    const recipientName = activity.recipient?.id === props.currentUserId ? 'you' : activity.recipient?.name;
+    const recipientName =
+      activity.recipient?.id === props.currentUserId ? 'you' : activity.recipient?.name;
     return `${userName} paid ${recipientName}`;
   }
 };
@@ -94,68 +98,84 @@ onMounted(fetchActivity);
 </script>
 
 <template>
-  <div class="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-    <div class="bg-gray-50/50 border-b border-gray-100 p-3">
-      <h2 class="text-[10px] font-black uppercase tracking-widest text-gray-500">Recent Activity</h2>
+  <div class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+    <div class="border-b border-gray-100 bg-gray-50/50 p-3">
+      <h2 class="text-[10px] font-black tracking-widest text-gray-500 uppercase">
+        Recent Activity
+      </h2>
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="p-6 text-center">
-      <div class="animate-pulse text-gray-400 text-sm">Loading activity...</div>
+      <div class="animate-pulse text-sm text-gray-400">Loading activity...</div>
     </div>
-    
+
     <!-- No activity -->
     <div v-else-if="activities.length === 0" class="p-6 text-center">
-      <div class="bg-gray-50 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-gray-100">
-        <Clock class="text-gray-300 h-6 w-6" />
+      <div
+        class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 bg-gray-50"
+      >
+        <Clock class="h-6 w-6 text-gray-300" />
       </div>
       <h3 class="mb-1 text-sm font-bold text-gray-900">No activity yet</h3>
-      <p class="text-xs text-gray-500">
-        Add expenses to see activity here.
-      </p>
+      <p class="text-xs text-gray-500">Add expenses to see activity here.</p>
     </div>
-    
+
     <!-- Activity List -->
-    <div v-else class="divide-y divide-gray-50 max-h-80 overflow-y-auto custom-scrollbar">
+    <div v-else class="custom-scrollbar max-h-80 divide-y divide-gray-50 overflow-y-auto">
       <div
         v-for="activity in activities"
         :key="activity.id"
-        class="flex items-start gap-2.5 p-3 hover:bg-gray-50/50 transition-colors"
+        class="flex items-start gap-2.5 p-3 transition-colors hover:bg-gray-50/50"
       >
         <!-- Icon -->
         <div
           :class="[
             'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border',
-            activity.isDeleted ? 'bg-red-50 border-red-100 text-red-600' :
-            activity.type === 'expense' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-orange-50 border-orange-100 text-orange-600'
+            activity.isDeleted
+              ? 'border-red-100 bg-red-50 text-red-600'
+              : activity.type === 'expense'
+                ? 'border-emerald-100 bg-emerald-50 text-emerald-600'
+                : 'border-orange-100 bg-orange-50 text-orange-600',
           ]"
         >
           <Trash2 v-if="activity.isDeleted" class="h-4 w-4" />
           <Receipt v-else-if="activity.type === 'expense'" class="h-4 w-4" />
           <CreditCard v-else class="h-4 w-4" />
         </div>
-        
+
         <!-- Content -->
-        <div class="flex-1 min-w-0">
-          <p class="text-[12px] leading-snug text-gray-700 line-clamp-2">
+        <div class="min-w-0 flex-1">
+          <p class="line-clamp-2 text-[12px] leading-snug text-gray-700">
             {{ getActivityDescription(activity) }}
           </p>
           <div class="mt-0.5 flex items-center justify-between">
-            <span :class="[
-              'text-[10px] font-bold uppercase tracking-tight',
-              activity.isDeleted ? 'text-red-600' :
-              activity.type === 'expense' ? 'text-emerald-600' : 'text-orange-600'
-            ]">
+            <span
+              :class="[
+                'text-[10px] font-bold tracking-tight uppercase',
+                activity.isDeleted
+                  ? 'text-red-600'
+                  : activity.type === 'expense'
+                    ? 'text-emerald-600'
+                    : 'text-orange-600',
+              ]"
+            >
               {{ activity.isDeleted ? 'Deleted' : formatCurrency(activity.amount) }}
             </span>
-            <span class="text-[9px] text-gray-400 font-medium">{{ formatDate(activity.date) }}</span>
+            <span class="text-[9px] font-medium text-gray-400">{{
+              formatDate(activity.date)
+            }}</span>
           </div>
         </div>
       </div>
     </div>
-    
-    <div class="p-2.5 bg-gray-50/30 text-center border-t border-gray-100">
-      <a href="/activity" class="text-[10px] uppercase font-bold text-sky-600 hover:text-sky-700 transition-colors">View all activity »</a>
+
+    <div class="border-t border-gray-100 bg-gray-50/30 p-2.5 text-center">
+      <a
+        href="/activity"
+        class="text-[10px] font-bold text-sky-600 uppercase transition-colors hover:text-sky-700"
+        >View all activity »</a
+      >
     </div>
   </div>
 </template>

@@ -44,7 +44,7 @@ const selectAll = () => {
 const displayText = computed(() => {
   if (isAllSelected.value) return 'All Groups';
   if (selectedIds.value.length === 1) {
-    const group = props.groups.find(g => g.id === selectedIds.value[0]);
+    const group = props.groups.find((g) => g.id === selectedIds.value[0]);
     return group?.name || '1 Group';
   }
   return `${selectedIds.value.length} Groups`;
@@ -68,12 +68,12 @@ onUnmounted(() => {
 <template>
   <div ref="dropdownRef" class="relative">
     <button
+      class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50"
       @click="isOpen = !isOpen"
-      class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
     >
-      <span class="truncate max-w-[200px]">{{ displayText }}</span>
-      <ChevronDown 
-        class="w-4 h-4 text-gray-400 transition-transform" 
+      <span class="max-w-[200px] truncate">{{ displayText }}</span>
+      <ChevronDown
+        class="h-4 w-4 text-gray-400 transition-transform"
         :class="{ 'rotate-180': isOpen }"
       />
     </button>
@@ -88,46 +88,44 @@ onUnmounted(() => {
     >
       <div
         v-if="isOpen"
-        class="absolute z-50 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-1 max-h-64 overflow-y-auto"
+        class="absolute z-50 mt-2 max-h-64 w-64 overflow-y-auto rounded-xl border border-gray-100 bg-white py-1 shadow-lg"
       >
         <!-- All Groups option -->
         <button
+          class="flex w-full items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
           @click="selectAll"
-          class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
         >
-          <div 
+          <div
             :class="[
-              'w-5 h-5 rounded flex items-center justify-center border-2 transition-colors',
-              isAllSelected 
-                ? 'bg-sky-500 border-sky-500 text-white' 
-                : 'border-gray-300'
+              'flex h-5 w-5 items-center justify-center rounded border-2 transition-colors',
+              isAllSelected ? 'border-sky-500 bg-sky-500 text-white' : 'border-gray-300',
             ]"
           >
-            <Check v-if="isAllSelected" class="w-3 h-3" />
+            <Check v-if="isAllSelected" class="h-3 w-3" />
           </div>
           <span class="text-sm font-medium text-gray-900">All Groups</span>
         </button>
 
-        <div class="h-px bg-gray-100 my-1" />
+        <div class="my-1 h-px bg-gray-100" />
 
         <!-- Individual groups -->
         <button
           v-for="group in groups"
           :key="group.id"
+          class="flex w-full items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
           @click="toggleGroup(group.id)"
-          class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
         >
-          <div 
+          <div
             :class="[
-              'w-5 h-5 rounded flex items-center justify-center border-2 transition-colors',
-              selectedIds.includes(group.id) 
-                ? 'bg-sky-500 border-sky-500 text-white' 
-                : 'border-gray-300'
+              'flex h-5 w-5 items-center justify-center rounded border-2 transition-colors',
+              selectedIds.includes(group.id)
+                ? 'border-sky-500 bg-sky-500 text-white'
+                : 'border-gray-300',
             ]"
           >
-            <Check v-if="selectedIds.includes(group.id)" class="w-3 h-3" />
+            <Check v-if="selectedIds.includes(group.id)" class="h-3 w-3" />
           </div>
-          <span class="text-sm text-gray-700 truncate">{{ group.name }}</span>
+          <span class="truncate text-sm text-gray-700">{{ group.name }}</span>
         </button>
       </div>
     </Transition>

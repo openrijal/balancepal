@@ -188,7 +188,7 @@ export const useGroupsStore = defineStore('groups', () => {
       if (currentGroup.value?.id === groupId && currentGroup.value.members) {
         currentGroup.value = {
           ...currentGroup.value,
-          members: currentGroup.value.members.filter(m => m.userId !== userId),
+          members: currentGroup.value.members.filter((m) => m.userId !== userId),
         };
       }
 

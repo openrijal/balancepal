@@ -44,35 +44,38 @@ const expenses = ref<Expense[]>(props.initialExpenses);
 const canAddExpense = computed(() => props.memberCount > 1);
 
 async function refreshExpenses() {
-    try {
-        const res = await fetch(`/api/groups/${props.groupId}/expenses`);
-        if (res.ok) {
-            expenses.value = await res.json();
-            // Refresh group stats via the shared Pinia store
-            groupsStore.fetchGroupStats(props.groupId);
-        }
-    } catch (e) {
-        console.error('Failed to refresh expenses', e);
+  try {
+    const res = await fetch(`/api/groups/${props.groupId}/expenses`);
+    if (res.ok) {
+      expenses.value = await res.json();
+      // Refresh group stats via the shared Pinia store
+      groupsStore.fetchGroupStats(props.groupId);
     }
+  } catch (e) {
+    console.error('Failed to refresh expenses', e);
+  }
 }
 </script>
 
 <template>
   <div class="space-y-6">
     <div class="flex items-center justify-between">
-        <h2 class="text-xl font-semibold">Expenses</h2>
-        <div v-if="!canAddExpense" class="text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
-            Invite members to add expenses
-        </div>
-        <div v-else class="flex items-center gap-2">
-            <CreateExpenseDialog :groupId="groupId" @expense-created="refreshExpenses" />
-            <SettleUpDialog 
-              :groupId="groupId" 
-              :members="members" 
-              :currentUserId="currentUserId"
-              @settlement-created="refreshExpenses" 
-            />
-        </div>
+      <h2 class="text-xl font-semibold">Expenses</h2>
+      <div
+        v-if="!canAddExpense"
+        class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm text-amber-600"
+      >
+        Invite members to add expenses
+      </div>
+      <div v-else class="flex items-center gap-2">
+        <CreateExpenseDialog :group-id="groupId" @expense-created="refreshExpenses" />
+        <SettleUpDialog
+          :group-id="groupId"
+          :members="members"
+          :current-user-id="currentUserId"
+          @settlement-created="refreshExpenses"
+        />
+      </div>
     </div>
 
     <ExpenseList :expenses="expenses" :current-user-id="currentUserId" />

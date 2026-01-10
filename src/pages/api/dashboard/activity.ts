@@ -4,111 +4,113 @@ import { ExpenseService } from '@/services/expenses';
 import { SettlementService } from '@/services/settlements';
 
 interface ActivityItem {
+  id: string;
+  type: 'expense' | 'settlement';
+  description: string;
+  amount: number;
+  date: string;
+  groupId: string;
+  groupName: string;
+  user: {
     id: string;
-    type: 'expense' | 'settlement';
-    description: string;
-    amount: number;
-    date: string;
-    groupId: string;
-    groupName: string;
-    user: {
-        id: string;
-        name: string;
-    };
-    recipient?: {
-        id: string;
-        name: string;
-    };
-    isDeleted?: boolean;
-    deletedBy?: {
-        id: string;
-        name: string;
-    };
+    name: string;
+  };
+  recipient?: {
+    id: string;
+    name: string;
+  };
+  isDeleted?: boolean;
+  deletedBy?: {
+    id: string;
+    name: string;
+  };
 }
 
 export const GET: APIRoute = async ({ locals, request }) => {
-    // User is attached by middleware (401 already handled by middleware)
-    const user = locals.user!;
+  // User is attached by middleware (401 already handled by middleware)
+  const user = locals.user!;
 
-    // Parse optional groupIds filter from query params
-    const url = new URL(request.url);
-    const groupIdsParam = url.searchParams.get('groupIds');
-    const filterGroupIds = groupIdsParam ? groupIdsParam.split(',').filter(Boolean) : null;
+  // Parse optional groupIds filter from query params
+  const url = new URL(request.url);
+  const groupIdsParam = url.searchParams.get('groupIds');
+  const filterGroupIds = groupIdsParam ? groupIdsParam.split(',').filter(Boolean) : null;
 
-    try {
-        // Get all user's groups
-        let groups = await GroupService.getUserGroups(user.id);
+  try {
+    // Get all user's groups
+    let groups = await GroupService.getUserGroups(user.id);
 
-        // Filter to specific groups if requested
-        if (filterGroupIds && filterGroupIds.length > 0) {
-            groups = groups.filter(g => filterGroupIds.includes(g.id));
-        }
-
-        const activities: ActivityItem[] = [];
-
-        // Fetch recent expenses and settlements from each group
-        // When filtering, process all matched groups; otherwise limit to 5 for performance
-        const groupsToProcess = filterGroupIds ? groups : groups.slice(0, 5);
-
-        for (const group of groupsToProcess) {
-            const [expenses, settlements] = await Promise.all([
-                ExpenseService.getGroupExpenses(group.id, true), // includeDeleted = true
-                SettlementService.getGroupSettlements(group.id),
-            ]);
-
-            // Add expenses to activities
-            for (const expense of expenses.slice(0, 10)) {
-                activities.push({
-                    id: expense.id,
-                    type: 'expense',
-                    description: expense.description,
-                    amount: parseFloat(expense.amount),
-                    groupId: group.id,
-                    groupName: group.name,
-                    user: {
-                        id: expense.paidBy?.id || '',
-                        name: expense.paidBy?.name || 'Unknown',
-                    },
-                    isDeleted: !!expense.deletedAt,
-                    date: (expense.deletedAt || expense.date).toISOString(), // Sort by deletion date if deleted
-                    deletedBy: expense.deletedAt ? {
-                        id: expense.deletedByUserId || '',
-                        name: 'Someone', // Could fetch name if needed, keeping it simple for now
-                    } : undefined,
-                });
-            }
-
-            // Add settlements to activities
-            for (const settlement of settlements.slice(0, 10)) {
-                activities.push({
-                    id: settlement.id,
-                    type: 'settlement',
-                    description: `Payment to ${settlement.toUser?.name || 'Unknown'}`,
-                    amount: parseFloat(settlement.amount),
-                    date: settlement.date.toISOString(),
-                    groupId: group.id,
-                    groupName: group.name,
-                    user: {
-                        id: settlement.fromUser?.id || '',
-                        name: settlement.fromUser?.name || 'Unknown',
-                    },
-                    recipient: {
-                        id: settlement.toUser?.id || '',
-                        name: settlement.toUser?.name || 'Unknown',
-                    },
-                });
-            }
-        }
-
-        // Sort by date descending and limit to 10 items
-        activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-        return new Response(JSON.stringify(activities.slice(0, 10)), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    } catch (e) {
-        console.error('Failed to fetch recent activity', e);
-        return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    // Filter to specific groups if requested
+    if (filterGroupIds && filterGroupIds.length > 0) {
+      groups = groups.filter((g) => filterGroupIds.includes(g.id));
     }
+
+    const activities: ActivityItem[] = [];
+
+    // Fetch recent expenses and settlements from each group
+    // When filtering, process all matched groups; otherwise limit to 5 for performance
+    const groupsToProcess = filterGroupIds ? groups : groups.slice(0, 5);
+
+    for (const group of groupsToProcess) {
+      const [expenses, settlements] = await Promise.all([
+        ExpenseService.getGroupExpenses(group.id, true), // includeDeleted = true
+        SettlementService.getGroupSettlements(group.id),
+      ]);
+
+      // Add expenses to activities
+      for (const expense of expenses.slice(0, 10)) {
+        activities.push({
+          id: expense.id,
+          type: 'expense',
+          description: expense.description,
+          amount: parseFloat(expense.amount),
+          groupId: group.id,
+          groupName: group.name,
+          user: {
+            id: expense.paidBy?.id || '',
+            name: expense.paidBy?.name || 'Unknown',
+          },
+          isDeleted: !!expense.deletedAt,
+          date: (expense.deletedAt || expense.date).toISOString(), // Sort by deletion date if deleted
+          deletedBy: expense.deletedAt
+            ? {
+                id: expense.deletedByUserId || '',
+                name: 'Someone', // Could fetch name if needed, keeping it simple for now
+              }
+            : undefined,
+        });
+      }
+
+      // Add settlements to activities
+      for (const settlement of settlements.slice(0, 10)) {
+        activities.push({
+          id: settlement.id,
+          type: 'settlement',
+          description: `Payment to ${settlement.toUser?.name || 'Unknown'}`,
+          amount: parseFloat(settlement.amount),
+          date: settlement.date.toISOString(),
+          groupId: group.id,
+          groupName: group.name,
+          user: {
+            id: settlement.fromUser?.id || '',
+            name: settlement.fromUser?.name || 'Unknown',
+          },
+          recipient: {
+            id: settlement.toUser?.id || '',
+            name: settlement.toUser?.name || 'Unknown',
+          },
+        });
+      }
+    }
+
+    // Sort by date descending and limit to 10 items
+    activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return new Response(JSON.stringify(activities.slice(0, 10)), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    console.error('Failed to fetch recent activity', e);
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+  }
 };

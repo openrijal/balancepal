@@ -98,7 +98,13 @@ onMounted(() => {
           <Receipt class="h-5 w-5 text-gray-500" />
           Shared Expenses
         </CardTitle>
-        <Button variant="ghost" size="icon" class="h-8 w-8" @click="fetchExpenses(false)" :disabled="loading">
+        <Button
+          variant="ghost"
+          size="icon"
+          class="h-8 w-8"
+          :disabled="loading"
+          @click="fetchExpenses(false)"
+        >
           <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
         </Button>
       </div>
@@ -110,20 +116,24 @@ onMounted(() => {
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="text-center py-8">
+      <div v-else-if="error" class="py-8 text-center">
         <p class="text-sm text-red-500">{{ error }}</p>
-        <Button variant="outline" size="sm" class="mt-2" @click="fetchExpenses(false)">Retry</Button>
+        <Button variant="outline" size="sm" class="mt-2" @click="fetchExpenses(false)"
+          >Retry</Button
+        >
       </div>
 
       <!-- Empty State -->
-      <div v-else-if="expenses.length === 0" class="text-center py-8">
-        <Receipt class="h-12 w-12 mx-auto text-gray-300 mb-3" />
+      <div v-else-if="expenses.length === 0" class="py-8 text-center">
+        <Receipt class="mx-auto mb-3 h-12 w-12 text-gray-300" />
         <p class="text-gray-500">No shared expenses with {{ friendName }}</p>
       </div>
 
       <!-- Expenses List -->
       <div v-else class="space-y-4">
-        <div class="divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+        <div
+          class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-100 shadow-sm"
+        >
           <TransactionItem
             v-for="expense in expenses"
             :key="expense.id"
@@ -131,13 +141,13 @@ onMounted(() => {
             :current-user-id="currentUserId"
           >
             <template #header>
-              <div class="flex items-start justify-between gap-3 w-full">
-                <div class="flex-1 min-w-0">
+              <div class="flex w-full items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
                   <div class="flex items-center gap-2">
                     <span class="text-lg">{{ categoryIcons[expense.category] || '📦' }}</span>
-                    <p class="font-bold text-gray-900 truncate">{{ expense.description }}</p>
+                    <p class="truncate font-bold text-gray-900">{{ expense.description }}</p>
                   </div>
-                  <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                  <div class="mt-1 flex items-center gap-2 text-xs text-gray-500">
                     <span class="font-bold text-sky-600">
                       {{ expense.groupName }}
                     </span>
@@ -145,10 +155,17 @@ onMounted(() => {
                     <span>{{ formatDate(expense.date) }}</span>
                   </div>
                 </div>
-                <div class="text-right shrink-0">
-                  <p class="font-bold text-gray-900 text-sm">{{ formatCurrency(expense.amount) }}</p>
-                  <p class="text-[10px] uppercase font-black text-gray-400 leading-none mt-0.5">
-                    {{ expense.paidByUserId === currentUserId ? 'You' : expense.paidByName.split(' ')[0] }} paid
+                <div class="shrink-0 text-right">
+                  <p class="text-sm font-bold text-gray-900">
+                    {{ formatCurrency(expense.amount) }}
+                  </p>
+                  <p class="mt-0.5 text-[10px] leading-none font-black text-gray-400 uppercase">
+                    {{
+                      expense.paidByUserId === currentUserId
+                        ? 'You'
+                        : expense.paidByName.split(' ')[0]
+                    }}
+                    paid
                   </p>
                 </div>
               </div>
@@ -157,10 +174,10 @@ onMounted(() => {
         </div>
 
         <!-- Load More Button -->
-        <div v-if="hasMore" class="text-center pt-2">
-          <Button variant="ghost" @click="loadMore" :disabled="loadingMore" class="w-full">
-            <RefreshCw v-if="loadingMore" class="h-4 w-4 mr-2 animate-spin" />
-            <ChevronDown v-else class="h-4 w-4 mr-2" />
+        <div v-if="hasMore" class="pt-2 text-center">
+          <Button variant="ghost" :disabled="loadingMore" class="w-full" @click="loadMore">
+            <RefreshCw v-if="loadingMore" class="mr-2 h-4 w-4 animate-spin" />
+            <ChevronDown v-else class="mr-2 h-4 w-4" />
             {{ loadingMore ? 'Loading...' : 'Load more' }}
           </Button>
         </div>

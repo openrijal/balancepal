@@ -71,7 +71,13 @@ onMounted(() => {
     <CardHeader class="pb-2">
       <div class="flex items-center justify-between">
         <CardTitle class="text-sm font-medium text-gray-500">Balance</CardTitle>
-        <Button variant="ghost" size="icon" class="h-8 w-8" @click="fetchBalance" :disabled="loading">
+        <Button
+          variant="ghost"
+          size="icon"
+          class="h-8 w-8"
+          :disabled="loading"
+          @click="fetchBalance"
+        >
           <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
         </Button>
       </div>
@@ -83,7 +89,7 @@ onMounted(() => {
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="text-center py-4">
+      <div v-else-if="error" class="py-4 text-center">
         <p class="text-sm text-red-500">{{ error }}</p>
         <Button variant="outline" size="sm" class="mt-2" @click="fetchBalance">Retry</Button>
       </div>
@@ -105,7 +111,7 @@ onMounted(() => {
             </template>
             <template v-else>$0.00</template>
           </div>
-          <p class="text-sm text-gray-500 mt-1 flex items-center justify-center gap-1">
+          <p class="mt-1 flex items-center justify-center gap-1 text-sm text-gray-500">
             <TrendingUp v-if="balanceStatus === 'positive'" class="h-4 w-4 text-green-500" />
             <TrendingDown v-else-if="balanceStatus === 'negative'" class="h-4 w-4 text-red-500" />
             <Minus v-else class="h-4 w-4 text-gray-400" />
@@ -115,7 +121,7 @@ onMounted(() => {
 
         <!-- Breakdown by Group -->
         <div v-if="balance.breakdown.length > 0" class="border-t pt-3">
-          <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">By Group</p>
+          <p class="mb-2 text-xs font-medium tracking-wide text-gray-400 uppercase">By Group</p>
           <div class="space-y-2">
             <div
               v-for="item in balance.breakdown"
@@ -124,7 +130,7 @@ onMounted(() => {
             >
               <a
                 :href="`/groups/${item.groupId}`"
-                class="text-gray-600 hover:text-primary-600 truncate max-w-[150px]"
+                class="hover:text-primary-600 max-w-[150px] truncate text-gray-600"
               >
                 {{ item.groupName }}
               </a>

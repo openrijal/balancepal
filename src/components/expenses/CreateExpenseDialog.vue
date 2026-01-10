@@ -55,7 +55,7 @@ async function handleSubmit() {
     // Success
     emit('expense-created');
     open.value = false;
-    
+
     // Reset form
     description.value = '';
     amount.value = '';
@@ -79,21 +79,17 @@ async function handleSubmit() {
     <DialogContent class="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle>Add Expense</DialogTitle>
-        <DialogDescription>
-          Add an expense to split equally with the group.
-        </DialogDescription>
+        <DialogDescription> Add an expense to split equally with the group. </DialogDescription>
       </DialogHeader>
 
       <div class="grid gap-4 py-4">
         <!-- Error -->
-        <div v-if="error" class="text-sm text-red-500 font-medium">
-            {{ error }}
+        <div v-if="error" class="text-sm font-medium text-red-500">
+          {{ error }}
         </div>
 
         <div class="grid grid-cols-4 items-center gap-4">
-          <label for="description" class="text-right text-sm font-medium">
-            Description
-          </label>
+          <label for="description" class="text-right text-sm font-medium"> Description </label>
           <Input
             id="description"
             v-model="description"
@@ -103,29 +99,27 @@ async function handleSubmit() {
           />
         </div>
         <div class="grid grid-cols-4 items-center gap-4">
-          <label for="amount" class="text-right text-sm font-medium">
-            Amount
-          </label>
+          <label for="amount" class="text-right text-sm font-medium"> Amount </label>
           <div class="relative col-span-3">
-             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-             <Input
-                id="amount"
-                v-model="amount"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                class="pl-7"
-                required
+            <span class="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">$</span>
+            <Input
+              id="amount"
+              v-model="amount"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              class="pl-7"
+              required
             />
           </div>
         </div>
       </div>
 
       <DialogFooter>
-        <Button type="submit" @click="handleSubmit" :disabled="loading">
-            <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
-            {{ loading ? 'Saving...' : 'Save Expense' }}
+        <Button type="submit" :disabled="loading" @click="handleSubmit">
+          <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
+          {{ loading ? 'Saving...' : 'Save Expense' }}
         </Button>
       </DialogFooter>
     </DialogContent>

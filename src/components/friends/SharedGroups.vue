@@ -18,13 +18,13 @@ defineProps<Props>();
 <template>
   <Card>
     <CardHeader class="pb-2">
-      <CardTitle class="text-sm font-medium text-gray-500 flex items-center gap-2">
+      <CardTitle class="flex items-center gap-2 text-sm font-medium text-gray-500">
         <Users class="h-4 w-4" />
         Shared Groups
       </CardTitle>
     </CardHeader>
     <CardContent>
-      <div v-if="groups.length === 0" class="text-center py-4">
+      <div v-if="groups.length === 0" class="py-4 text-center">
         <p class="text-sm text-gray-400">No shared groups</p>
       </div>
 
@@ -33,12 +33,12 @@ defineProps<Props>();
           v-for="group in groups"
           :key="group.id"
           :href="`/groups/${group.id}`"
-          class="block p-3 rounded-lg bg-gray-50 hover:bg-primary-50 transition-colors group"
+          class="hover:bg-primary-50 group block rounded-lg bg-gray-50 p-3 transition-colors"
         >
-          <p class="text-sm font-medium text-gray-900 group-hover:text-primary-700">
+          <p class="group-hover:text-primary-700 text-sm font-medium text-gray-900">
             {{ group.name }}
           </p>
-          <p v-if="group.description" class="text-xs text-gray-500 mt-0.5 truncate">
+          <p v-if="group.description" class="mt-0.5 truncate text-xs text-gray-500">
             {{ group.description }}
           </p>
         </a>

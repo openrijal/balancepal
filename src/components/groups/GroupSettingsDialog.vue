@@ -70,36 +70,36 @@ watch(open, (isOpen) => {
 });
 
 const isAdmin = computed(() => {
-  return props.members.some(m => m.userId === props.currentUserId && m.role === 'admin');
+  return props.members.some((m) => m.userId === props.currentUserId && m.role === 'admin');
 });
 
-const existingMemberIds = computed(() => props.members.map(m => m.userId));
+const existingMemberIds = computed(() => props.members.map((m) => m.userId));
 
 const canSave = computed(() => {
-  return editName.value.trim().length > 0 && (
-    editName.value !== props.groupName || 
-    editDescription.value !== (props.description || '')
+  return (
+    editName.value.trim().length > 0 &&
+    (editName.value !== props.groupName || editDescription.value !== (props.description || ''))
   );
 });
 
 async function handleSave() {
   if (!canSave.value) return;
-  
+
   saving.value = true;
   error.value = null;
-  
+
   const result = await groupsStore.updateGroupDetails(props.groupId, {
     name: editName.value.trim(),
     description: editDescription.value.trim() || undefined,
   });
-  
+
   saving.value = false;
-  
+
   if (result.success) {
     toast.success('Group settings updated');
-    emit('group-updated', { 
-      name: editName.value.trim(), 
-      description: editDescription.value.trim() || null 
+    emit('group-updated', {
+      name: editName.value.trim(),
+      description: editDescription.value.trim() || null,
     });
     open.value = false;
   } else {
@@ -113,18 +113,18 @@ async function handleRemoveMember(userId: string, memberName: string) {
     // Leaving the group - confirm first
     if (!confirm(`Are you sure you want to leave this group?`)) return;
   }
-  
+
   removingMember.value = userId;
   error.value = null;
-  
+
   const result = await groupsStore.removeMemberFromGroup(props.groupId, userId);
-  
+
   removingMember.value = null;
-  
+
   if (result.success) {
     toast.success(`${memberName} removed from group`);
     emit('member-removed', userId);
-    
+
     // If user left the group, redirect
     if (userId === props.currentUserId) {
       window.location.href = '/groups';
@@ -140,14 +140,14 @@ async function handleDeleteGroup() {
     showDeleteConfirm.value = true;
     return;
   }
-  
+
   deleting.value = true;
   error.value = null;
-  
+
   const result = await groupsStore.deleteGroupById(props.groupId);
-  
+
   deleting.value = false;
-  
+
   if (result.success) {
     toast.success('Group deleted');
     emit('group-deleted');
@@ -162,7 +162,7 @@ async function handleDeleteGroup() {
 function getInitials(name: string) {
   return name
     .split(' ')
-    .map(n => n[0])
+    .map((n) => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);
@@ -182,107 +182,98 @@ function handleMemberAdded() {
         <span class="sr-only">Group Settings</span>
       </Button>
     </DialogTrigger>
-    
-    <DialogContent class="sm:max-w-[500px] overflow-hidden flex flex-col max-h-[90vh]">
+
+    <DialogContent class="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-[500px]">
       <DialogHeader>
-        <DialogTitle class="text-sm font-bold uppercase tracking-wider text-gray-500">
+        <DialogTitle class="text-sm font-bold tracking-wider text-gray-500 uppercase">
           Edit Group Settings
         </DialogTitle>
         <DialogDescription>
           Update group details, manage members, or delete the group.
         </DialogDescription>
       </DialogHeader>
-      
-      <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6 py-4">
+
+      <div class="custom-scrollbar flex-1 space-y-6 overflow-y-auto py-4 pr-2">
         <!-- Error Message -->
-        <div v-if="error" class="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-100 flex items-start gap-2">
-          <AlertTriangle class="h-4 w-4 mt-0.5 flex-shrink-0" />
+        <div
+          v-if="error"
+          class="flex items-start gap-2 rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-500"
+        >
+          <AlertTriangle class="mt-0.5 h-4 w-4 flex-shrink-0" />
           <span>{{ error }}</span>
         </div>
-        
+
         <!-- Group Name -->
         <div class="space-y-2">
-          <label class="text-xs font-bold uppercase tracking-wider text-gray-500">
+          <label class="text-xs font-bold tracking-wider text-gray-500 uppercase">
             My group is called...
           </label>
-          <Input 
-            v-model="editName" 
-            placeholder="Group name"
-            class="text-lg font-medium"
-          />
+          <Input v-model="editName" placeholder="Group name" class="text-lg font-medium" />
         </div>
-        
+
         <!-- Description -->
         <div class="space-y-2">
-          <label class="text-xs font-bold uppercase tracking-wider text-gray-500">
+          <label class="text-xs font-bold tracking-wider text-gray-500 uppercase">
             Description (optional)
           </label>
-          <Input 
-            v-model="editDescription" 
-            placeholder="What is this group for?"
-          />
+          <Input v-model="editDescription" placeholder="What is this group for?" />
         </div>
-        
+
         <!-- Members Section -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500">
-              Group Members
-            </h3>
-            <Button 
-              variant="link" 
-              size="sm" 
+            <h3 class="text-xs font-bold tracking-wider text-gray-500 uppercase">Group Members</h3>
+            <Button
+              variant="link"
+              size="sm"
               class="text-primary h-auto p-0"
               @click="showInviteDialog = true"
             >
               + Add a person
             </Button>
           </div>
-          
+
           <div class="space-y-1">
-            <div 
-              v-for="member in members" 
+            <div
+              v-for="member in members"
               :key="member.id"
-              class="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors group"
+              class="group flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-gray-50"
             >
               <div class="flex items-center gap-3">
-                <div 
+                <div
                   v-if="member.user.profilePictureUrl"
-                  class="w-8 h-8 rounded-full bg-cover bg-center"
+                  class="h-8 w-8 rounded-full bg-cover bg-center"
                   :style="{ backgroundImage: `url(${member.user.profilePictureUrl})` }"
                 />
-                <div 
-                  v-else 
-                  class="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center text-xs font-medium text-primary"
+                <div
+                  v-else
+                  class="from-primary/20 to-primary/40 text-primary flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br text-xs font-medium"
                 >
                   {{ getInitials(member.user.name) }}
                 </div>
                 <div>
                   <div class="flex items-center gap-2">
-                    <span class="font-medium text-sm">{{ member.user.name }}</span>
-                    <span 
-                      v-if="member.role === 'admin'" 
-                      class="text-[10px] uppercase font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded"
+                    <span class="text-sm font-medium">{{ member.user.name }}</span>
+                    <span
+                      v-if="member.role === 'admin'"
+                      class="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 uppercase"
                     >
                       Admin
                     </span>
-                    <span 
-                      v-if="member.userId === currentUserId" 
-                      class="text-[10px] text-gray-400"
-                    >
+                    <span v-if="member.userId === currentUserId" class="text-[10px] text-gray-400">
                       (you)
                     </span>
                   </div>
                   <span class="text-xs text-gray-400 italic">{{ member.user.email }}</span>
                 </div>
               </div>
-              
+
               <button
                 v-if="member.userId !== currentUserId || members.length > 1"
-                @click="handleRemoveMember(member.userId, member.user.name)"
                 :disabled="removingMember === member.userId"
-                class="text-red-400 hover:text-red-600 p-1 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                class="p-1 text-red-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-600 disabled:opacity-50"
                 :title="member.userId === currentUserId ? 'Leave group' : 'Remove member'"
+                @click="handleRemoveMember(member.userId, member.user.name)"
               >
                 <Loader2 v-if="removingMember === member.userId" class="h-4 w-4 animate-spin" />
                 <X v-else class="h-4 w-4" />
@@ -290,55 +281,54 @@ function handleMemberAdded() {
             </div>
           </div>
         </div>
-        
+
         <!-- Invite Member Dialog (reused) -->
-        <InviteMemberDialog 
-          :groupId="groupId" 
-          v-model:isOpen="showInviteDialog" 
-          :existingMemberIds="existingMemberIds"
+        <InviteMemberDialog
+          v-model:is-open="showInviteDialog"
+          :group-id="groupId"
+          :existing-member-ids="existingMemberIds"
           hide-trigger
           @member-added="handleMemberAdded"
         />
-        
+
         <!-- Danger Zone -->
-        <div v-if="isAdmin" class="pt-4 border-t">
+        <div v-if="isAdmin" class="border-t pt-4">
           <div class="space-y-3">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-red-500">
-              Danger Zone
-            </h3>
-            
+            <h3 class="text-xs font-bold tracking-wider text-red-500 uppercase">Danger Zone</h3>
+
             <div v-if="!showDeleteConfirm">
-              <button 
+              <button
+                class="text-sm text-red-500 underline underline-offset-2 hover:text-red-700"
                 @click="showDeleteConfirm = true"
-                class="text-sm text-red-500 hover:text-red-700 underline underline-offset-2"
               >
                 delete group
               </button>
             </div>
-            
-            <div v-else class="bg-red-50 p-4 rounded-lg border border-red-200 space-y-3">
+
+            <div v-else class="space-y-3 rounded-lg border border-red-200 bg-red-50 p-4">
               <p class="text-sm text-red-700">
-                <strong>Are you sure?</strong> This will permanently delete the group and all its expenses. This action cannot be undone.
+                <strong>Are you sure?</strong> This will permanently delete the group and all its
+                expenses. This action cannot be undone.
               </p>
               <p class="text-xs text-red-600">
                 Note: All balances must be settled before deleting.
               </p>
               <div class="flex gap-2">
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   size="sm"
-                  @click="handleDeleteGroup"
                   :disabled="deleting"
+                  @click="handleDeleteGroup"
                 >
                   <Loader2 v-if="deleting" class="mr-2 h-4 w-4 animate-spin" />
                   <Trash2 v-else class="mr-2 h-4 w-4" />
                   Yes, Delete Group
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
-                  @click="showDeleteConfirm = false"
                   :disabled="deleting"
+                  @click="showDeleteConfirm = false"
                 >
                   Cancel
                 </Button>
@@ -347,15 +337,13 @@ function handleMemberAdded() {
           </div>
         </div>
       </div>
-      
+
       <DialogFooter class="border-t pt-4">
-        <Button variant="outline" @click="open = false" :disabled="saving">
-          Cancel
-        </Button>
-        <Button 
-          @click="handleSave" 
+        <Button variant="outline" :disabled="saving" @click="open = false"> Cancel </Button>
+        <Button
           :disabled="!canSave || saving"
           class="bg-orange-500 hover:bg-orange-600"
+          @click="handleSave"
         >
           <Loader2 v-if="saving" class="mr-2 h-4 w-4 animate-spin" />
           Save changes

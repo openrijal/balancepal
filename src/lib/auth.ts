@@ -20,25 +20,70 @@ export function createSupabaseServerClient(cookies: AstroCookies) {
         // We need to get all cookies from Astro and filter for Supabase ones
         const projectRef = supabaseUrl.match(/https:\/\/(.+?)\.supabase/)?.[1] || '';
         const authTokenName = `sb-${projectRef}-auth-token`;
+        const codeVerifierName = `sb-${projectRef}-auth-token-code-verifier`;
 
-        // Get the main auth token cookie
-        const authToken = cookies.get(authTokenName);
-        if (authToken?.value) {
-          allCookies.push({ name: authTokenName, value: authToken.value });
+        // Helper to get main cookie and all its chunks
+        const getCookieWithChunks = (baseName: string) => {
+          const cookiesFound: { name: string; value: string }[] = [];
+
+          // Check main cookie
+          const main = cookies.get(baseName);
+          if (main?.value) {
+            cookiesFound.push({ name: baseName, value: main.value });
+          }
+
+          // Check chunks (usually up to a reasonable limit, checking until missing is safer but max 20 prevents infinite)
+          for (let i = 0; i < 20; i++) {
+            const chunkName = `${baseName}.${i}`;
+            const chunk = cookies.get(chunkName);
+            if (chunk?.value) {
+              cookiesFound.push({ name: chunkName, value: chunk.value });
+            } else {
+              // Usually chunks are sequential, but we can't always guarantee it if deletion happened weirdly.
+              // But for getAll, break on first missing is standard unless we want to be very thorough.
+              // Let's break to be efficient.
+              break;
+            }
+          }
+          return cookiesFound;
+        };
+
+        const authCookies = getCookieWithChunks(authTokenName);
+        const verifierCookies = getCookieWithChunks(codeVerifierName);
+
+        allCookies.push(...authCookies);
+        allCookies.push(...verifierCookies);
+
+        // Debug logging
+        if (authCookies.length > 0) {
+          console.log(`[Auth] Auth token found with ${authCookies.length} chunks`);
+        } else {
+          console.log(`[Auth] Auth token MISSING: ${authTokenName}`);
         }
 
-        // Also check for code verifier cookie (used in PKCE flow)
-        const codeVerifierName = `sb-${projectRef}-auth-token-code-verifier`;
-        const codeVerifier = cookies.get(codeVerifierName);
-        if (codeVerifier?.value) {
-          allCookies.push({ name: codeVerifierName, value: codeVerifier.value });
+        if (verifierCookies.length > 0) {
+          console.log(`[Auth] Code verifier found with ${verifierCookies.length} chunks`);
         }
 
         return allCookies;
       },
       setAll(cookiesToSet) {
+        console.log(
+          '[Auth] Setting cookies:',
+          cookiesToSet.map((c) => `${c.name} (SameSite=${c.options?.sameSite})`)
+        );
         cookiesToSet.forEach(({ name, value, options }) => {
-          cookies.set(name, value, options);
+          let sameSite: boolean | 'lax' | 'strict' | 'none' | undefined = undefined;
+          if (typeof options?.sameSite === 'string') {
+            sameSite = options.sameSite.toLowerCase() as 'lax' | 'strict' | 'none';
+          } else if (typeof options?.sameSite === 'boolean') {
+            sameSite = options.sameSite;
+          }
+
+          cookies.set(name, value, {
+            ...options,
+            sameSite,
+          });
         });
       },
     },

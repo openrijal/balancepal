@@ -48,14 +48,13 @@ const onSubmit = handleSubmit(async (values) => {
 
     const data = await response.json();
     toast.success('Group created successfully!');
-    
+
     // Reset and close
     resetForm();
     open.value = false;
-    
+
     // Redirect to the new group Page
     window.location.href = `/groups/${data.id}`;
-    
   } catch (error) {
     console.error(error);
     toast.error('Failed to create group');
@@ -73,22 +72,27 @@ const onSubmit = handleSubmit(async (values) => {
     <DialogContent class="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle>Create Group</DialogTitle>
-        <DialogDescription>
-          Create a new group to split expenses with friends.
-        </DialogDescription>
+        <DialogDescription> Create a new group to split expenses with friends. </DialogDescription>
       </DialogHeader>
-      
-      <form @submit="onSubmit" class="grid gap-4 py-4">
+
+      <form class="grid gap-4 py-4" @submit="onSubmit">
         <div class="grid gap-2">
           <label for="name" class="text-sm font-medium">Name</label>
           <Input id="name" v-model="name" v-bind="nameProps" placeholder="Paris Trip 2024" />
           <span v-if="errors.name" class="text-sm text-red-500">{{ errors.name }}</span>
         </div>
-        
+
         <div class="grid gap-2">
           <label for="description" class="text-sm font-medium">Description (Optional)</label>
-          <Input id="description" v-model="description" v-bind="descriptionProps" placeholder="Expenses for our trip..." />
-          <span v-if="errors.description" class="text-sm text-red-500">{{ errors.description }}</span>
+          <Input
+            id="description"
+            v-model="description"
+            v-bind="descriptionProps"
+            placeholder="Expenses for our trip..."
+          />
+          <span v-if="errors.description" class="text-sm text-red-500">{{
+            errors.description
+          }}</span>
         </div>
 
         <DialogFooter>

@@ -64,7 +64,7 @@ function handleGroupUpdated(data: { name: string; description: string | null }) 
 
 function handleMemberRemoved(userId: string) {
   // Update local members list
-  localMembers.value = localMembers.value.filter(m => m.userId !== userId);
+  localMembers.value = localMembers.value.filter((m) => m.userId !== userId);
 }
 
 onMounted(() => {
@@ -73,51 +73,44 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 border-b pb-6 mb-6">
+  <div class="mb-6 flex flex-col gap-4 border-b pb-6">
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold tracking-tight text-gray-900">{{ displayName }}</h1>
-        <p v-if="displayDescription" class="text-muted-foreground mt-1 text-sm">{{ displayDescription }}</p>
+        <p v-if="displayDescription" class="text-muted-foreground mt-1 text-sm">
+          {{ displayDescription }}
+        </p>
       </div>
-      <div class="flex gap-2 items-center">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          class="h-9 w-9"
-          @click="showSettingsDialog = true"
-        >
+      <div class="flex items-center gap-2">
+        <Button variant="ghost" size="icon" class="h-9 w-9" @click="showSettingsDialog = true">
           <Settings class="h-5 w-5" />
           <span class="sr-only">Group Settings</span>
         </Button>
       </div>
     </div>
-    
-    <InviteMemberDialog 
-      :groupId="groupId" 
-      v-model:isOpen="showInviteDialog" 
-      hide-trigger
-    />
-    
+
+    <InviteMemberDialog v-model:is-open="showInviteDialog" :group-id="groupId" hide-trigger />
+
     <GroupSettingsDialog
-      :groupId="groupId"
-      :groupName="displayName"
+      v-model:is-open="showSettingsDialog"
+      :group-id="groupId"
+      :group-name="displayName"
       :description="displayDescription"
       :members="localMembers"
-      :currentUserId="currentUserId"
-      v-model:isOpen="showSettingsDialog"
+      :current-user-id="currentUserId"
       hide-trigger
       @group-updated="handleGroupUpdated"
       @member-removed="handleMemberRemoved"
     />
-    
+
     <!-- Stats Section -->
     <div class="flex gap-6">
       <div class="space-y-1">
-        <p class="text-sm font-medium text-muted-foreground">Total Expenses</p>
+        <p class="text-muted-foreground text-sm font-medium">Total Expenses</p>
         <p class="text-2xl font-semibold">{{ formatCurrency(totalExpenses) }}</p>
       </div>
       <div class="space-y-1">
-        <p class="text-sm font-medium text-muted-foreground">Your Balance</p>
+        <p class="text-muted-foreground text-sm font-medium">Your Balance</p>
         <p :class="['text-2xl font-semibold', balanceClass]">
           {{ balancePrefix }}{{ formatCurrency(userBalance) }}
         </p>

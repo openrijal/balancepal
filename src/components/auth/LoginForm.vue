@@ -62,62 +62,111 @@ async function handleSubmit() {
     loading.value = false;
   }
 }
+
+async function signInWithGoogle() {
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/api/auth/callback?next=${props.redirectTo}`,
+      },
+    });
+
+    if (authError) {
+      error.value = authError.message;
+    }
+    // No need to handle success explicitly as it redirects
+  } catch (err) {
+    error.value = 'An error occurred initiating Google login.';
+    console.error('Google login error:', err);
+    loading.value = false;
+  }
+}
 </script>
 
 <template>
-  <form class="space-y-4" @submit.prevent="handleSubmit">
-    <!-- Error Alert -->
-    <div
-      v-if="error"
-      class="bg-danger-500/10 text-danger-500 flex items-start gap-2 rounded-lg p-3 text-sm"
+  <div class="space-y-4">
+    <Button
+      variant="outline"
+      type="button"
+      class="w-full"
+      :disabled="loading"
+      @click="signInWithGoogle"
     >
-      <AlertCircle class="mt-0.5 h-5 w-5 flex-shrink-0" />
-      <span>{{ error }}</span>
-    </div>
-
-    <!-- Email -->
-    <div class="space-y-2">
-      <label for="email" class="block text-sm font-medium text-gray-700"> Email </label>
-      <div class="relative">
-        <Mail class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
-        <Input
-          id="email"
-          v-model="email"
-          type="email"
-          placeholder="you@example.com"
-          class="pl-10"
-          required
-          :disabled="loading"
-        />
-      </div>
-    </div>
-
-    <!-- Password -->
-    <div class="space-y-2">
-      <div class="flex items-center justify-between">
-        <label for="password" class="block text-sm font-medium text-gray-700"> Password </label>
-        <a href="/forgot-password" class="text-primary-600 hover:text-primary-700 text-sm">
-          Forgot password?
-        </a>
-      </div>
-      <div class="relative">
-        <Lock class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
-        <Input
-          id="password"
-          v-model="password"
-          type="password"
-          placeholder="••••••••"
-          class="pl-10"
-          required
-          :disabled="loading"
-        />
-      </div>
-    </div>
-
-    <!-- Submit Button -->
-    <Button type="submit" class="w-full" :disabled="loading">
-      <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
-      {{ loading ? 'Logging in...' : 'Log in' }}
+      <img
+        src="https://www.svgrepo.com/show/475656/google-color.svg"
+        alt="Google"
+        class="mr-2 h-4 w-4"
+      />
+      Sign in with Google
     </Button>
-  </form>
+
+    <div class="relative">
+      <div class="absolute inset-0 flex items-center">
+        <span class="w-full border-t border-gray-300" />
+      </div>
+      <div class="relative flex justify-center text-xs uppercase">
+        <span class="bg-white px-2 text-gray-500">Or continue with email</span>
+      </div>
+    </div>
+
+    <form class="space-y-4" @submit.prevent="handleSubmit">
+      <!-- Error Alert -->
+      <div
+        v-if="error"
+        class="bg-danger-500/10 text-danger-500 flex items-start gap-2 rounded-lg p-3 text-sm"
+      >
+        <AlertCircle class="mt-0.5 h-5 w-5 flex-shrink-0" />
+        <span>{{ error }}</span>
+      </div>
+
+      <!-- Email -->
+      <div class="space-y-2">
+        <label for="email" class="block text-sm font-medium text-gray-700"> Email </label>
+        <div class="relative">
+          <Mail class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <Input
+            id="email"
+            v-model="email"
+            type="email"
+            placeholder="you@example.com"
+            class="pl-10"
+            required
+            :disabled="loading"
+          />
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <label for="password" class="block text-sm font-medium text-gray-700"> Password </label>
+          <a href="/forgot-password" class="text-primary-600 hover:text-primary-700 text-sm">
+            Forgot password?
+          </a>
+        </div>
+        <div class="relative">
+          <Lock class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <Input
+            id="password"
+            v-model="password"
+            type="password"
+            placeholder="••••••••"
+            class="pl-10"
+            required
+            :disabled="loading"
+          />
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <Button type="submit" class="w-full" :disabled="loading">
+        <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
+        {{ loading ? 'Logging in...' : 'Log in' }}
+      </Button>
+    </form>
+  </div>
 </template>

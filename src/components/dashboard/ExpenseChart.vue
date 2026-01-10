@@ -11,14 +11,14 @@ const chartData = ref([
   { month: 'Jun', expenses: 250, settlements: 180 },
 ]);
 
-const maxValue = Math.max(...chartData.value.flatMap(d => [d.expenses, d.settlements]));
+const maxValue = Math.max(...chartData.value.flatMap((d) => [d.expenses, d.settlements]));
 const getBarHeight = (value: number) => (value / maxValue) * 100;
 </script>
 
 <template>
   <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
     <h3 class="mb-6 font-semibold text-gray-900">Expense Trends</h3>
-    
+
     <!-- Legend -->
     <div class="mb-4 flex gap-4 text-sm">
       <div class="flex items-center gap-2">
@@ -30,18 +30,18 @@ const getBarHeight = (value: number) => (value / maxValue) * 100;
         <span class="text-gray-600">Settlements</span>
       </div>
     </div>
-    
+
     <!-- Chart -->
     <div class="flex h-48 items-end justify-between gap-2">
       <template v-for="item in chartData" :key="item.month">
         <div class="flex flex-1 flex-col items-center gap-1">
-          <div class="flex w-full items-end justify-center gap-1" style="height: 160px;">
-            <div 
+          <div class="flex w-full items-end justify-center gap-1" style="height: 160px">
+            <div
               class="w-3 rounded-t bg-emerald-500 transition-all duration-300"
               :style="{ height: `${getBarHeight(item.expenses)}%` }"
               :title="`Expenses: $${item.expenses}`"
             ></div>
-            <div 
+            <div
               class="w-3 rounded-t bg-sky-500 transition-all duration-300"
               :style="{ height: `${getBarHeight(item.settlements)}%` }"
               :title="`Settlements: $${item.settlements}`"
@@ -51,7 +51,7 @@ const getBarHeight = (value: number) => (value / maxValue) * 100;
         </div>
       </template>
     </div>
-    
+
     <!-- Summary -->
     <div class="mt-4 grid grid-cols-2 gap-4 border-t pt-4">
       <div>

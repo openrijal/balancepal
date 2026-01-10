@@ -19,10 +19,10 @@ const openDatePicker = () => {
 
 const formattedDate = computed(() => {
   if (!props.modelValue) return props.placeholder || 'Select date';
-  return new Date(props.modelValue).toLocaleDateString('en-US', { 
-    month: 'long', 
-    day: 'numeric', 
-    year: 'numeric' 
+  return new Date(props.modelValue).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
   });
 });
 
@@ -34,20 +34,20 @@ const handleChange = (e: Event) => {
 
 <template>
   <div class="relative inline-block">
-    <button 
+    <button
       type="button"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+      class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
       @click="openDatePicker"
     >
       <Calendar class="h-4 w-4 text-gray-400" />
       <span>{{ formattedDate }}</span>
     </button>
-    <input 
+    <input
       ref="dateInputRef"
       type="date"
       :value="modelValue"
-      @change="handleChange"
       class="sr-only"
+      @change="handleChange"
     />
   </div>
 </template>
