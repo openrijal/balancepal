@@ -7,27 +7,36 @@ import { BalanceService } from '@/services/balances';
 // User is attached by middleware (already authenticated by middleware)
 const user = Astro.locals.user!;
 
-const groups = await GroupService.getUserGroups(user.id);
+let groups: any[] = [];
+let groupsWithBalances: any[] = [];
+let error = null;
 
-// Fetch balance info for each group
-const groupsWithBalances = await Promise.all(
-  groups.map(async (group) => {
-    try {
-      const stats = await BalanceService.getGroupStats(group.id, user.id);
-      return {
-        ...group,
-        userBalance: stats.userBalance,
-        totalExpenses: stats.totalExpenses,
-      };
-    } catch {
-      return {
-        ...group,
-        userBalance: 0,
-        totalExpenses: 0,
-      };
-    }
-  })
-);
+try {
+  groups = await GroupService.getUserGroups(user.id);
+  
+  // Fetch balance info for each group
+  groupsWithBalances = await Promise.all(
+    groups.map(async (group) => {
+      try {
+        const stats = await BalanceService.getGroupStats(group.id, user.id);
+        return {
+          ...group,
+          userBalance: stats.userBalance,
+          totalExpenses: stats.totalExpenses,
+        };
+      } catch {
+        return {
+          ...group,
+          userBalance: 0,
+          totalExpenses: 0,
+        };
+      }
+    })
+  );
+} catch (e: any) {
+  console.error('Error fetching groups:', e);
+  error = e?.message || 'Unknown error occurred';
+}
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -48,7 +57,12 @@ const formatCurrency = (amount: number) => {
     </div>
 
     {
-      groupsWithBalances.length === 0 ? (
+      error ? (
+        <div class="bg-red-50 border-red-200 border rounded-lg p-4 text-red-800">
+           <h3 class="font-bold">Error loading groups</h3>
+           <p>{error}</p>
+        </div>
+      ) : groupsWithBalances.length === 0 ? (
         <div class="bg-muted/30 border-muted-foreground/25 rounded-lg border border-dashed py-12 text-center">
           <div class="space-y-3">
             <h3 class="text-lg font-medium">No groups yet</h3>
