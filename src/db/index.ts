@@ -2,12 +2,13 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 
-// For query purposes (read-only connection pooling)
-const connectionString = import.meta.env.DATABASE_URL;
+import { DATABASE_URL } from 'astro:env/server';
 
-if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
-}
+// For query purposes (read-only connection pooling)
+const connectionString = DATABASE_URL;
+
+// astro:env ensures DATABASE_URL is present, so manual check is redundant but safe to remove
+// if (!connectionString) ... check is handled by Astro schema validation
 
 // Create postgres client
 // Using { prepare: false } for Supabase connection pooler compatibility

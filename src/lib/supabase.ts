@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
 
-const supabaseUrl = import.meta.env.SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey =
-  import.meta.env.SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from 'astro:env/server';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from 'astro:env/client';
+
+const supabaseUrl = SUPABASE_URL; // Server side default
+const supabaseAnonKey = SUPABASE_ANON_KEY; // Server side default
 
 // Only throw on server if missing and actually trying to use it?
 // Or just let it fail later?
@@ -28,13 +30,12 @@ export const supabase = createClient<Database>(supabaseUrl || '', supabaseAnonKe
  * Used in Vue components (client:load, etc.)
  */
 export function createBrowserClient() {
-  const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || import.meta.env.SUPABASE_URL;
-  const supabaseAnonKey =
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY;
+  const supabaseUrl = PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = PUBLIC_SUPABASE_ANON_KEY;
 
   console.log('createBrowserClient env check:', {
-    PUBLIC_URL: !!import.meta.env.PUBLIC_SUPABASE_URL,
-    PUBLIC_KEY: !!import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+    PUBLIC_URL: !!PUBLIC_SUPABASE_URL,
+    PUBLIC_KEY: !!PUBLIC_SUPABASE_ANON_KEY,
     URL_VAL: supabaseUrl ? 'Set' : 'Unset',
   });
 

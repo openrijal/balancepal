@@ -102,9 +102,11 @@ onMounted(() => {
   }
 });
 
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from 'astro:env/client';
+
 const supabase = getSupabaseBrowserClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  PUBLIC_SUPABASE_URL,
+  PUBLIC_SUPABASE_ANON_KEY
 );
 
 const handleLogout = async () => {
@@ -165,13 +167,9 @@ const handleInviteFriend = async () => {
 <template>
   <!-- Mobile Bottom Navigation -->
   <div v-if="mobile" class="flex h-16 items-center justify-around px-2">
-    <a
-      v-for="item in navItems"
-      :key="item.href"
-      :href="item.href"
+    <a v-for="item in navItems" :key="item.href" :href="item.href"
       class="flex flex-1 flex-col items-center justify-center rounded-lg py-2 transition-colors"
-      :class="isActive(item.href) ? 'text-primary-600' : 'text-gray-500 hover:text-gray-900'"
-    >
+      :class="isActive(item.href) ? 'text-primary-600' : 'text-gray-500 hover:text-gray-900'">
       <component :is="item.icon" class="mb-1 h-5 w-5" />
       <span class="text-xs font-medium">{{ item.label }}</span>
     </a>
@@ -191,17 +189,11 @@ const handleInviteFriend = async () => {
 
     <!-- Main Navigation -->
     <nav class="mb-6 space-y-0.5 px-2">
-      <a
-        v-for="item in navItems"
-        :key="item.href"
-        :href="item.href"
-        class="flex items-center gap-3 rounded px-3 py-1.5 text-[13px] font-medium transition-colors"
-        :class="
-          isActive(item.href)
+      <a v-for="item in navItems" :key="item.href" :href="item.href"
+        class="flex items-center gap-3 rounded px-3 py-1.5 text-[13px] font-medium transition-colors" :class="isActive(item.href)
             ? 'bg-primary-50 text-primary-700'
             : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-        "
-      >
+          ">
         <component :is="item.icon" class="h-4 w-4" />
         {{ item.label }}
       </a>
@@ -211,21 +203,15 @@ const handleInviteFriend = async () => {
     <div class="mb-6 px-2">
       <div class="mb-1 flex items-center justify-between px-3 py-1">
         <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase">Groups</span>
-        <button
-          class="rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-          @click="createGroupOpen = true"
-        >
+        <button class="rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          @click="createGroupOpen = true">
           <Plus class="h-3 w-3" />
         </button>
       </div>
       <div class="space-y-0.5">
-        <a
-          v-for="group in groups"
-          :key="group.id"
-          :href="`/groups/${group.id}`"
+        <a v-for="group in groups" :key="group.id" :href="`/groups/${group.id}`"
           class="flex items-center gap-3 rounded px-3 py-1.5 text-[13px] text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
-          :class="{ 'bg-primary-50 text-primary-700 font-medium': isActive(`/groups/${group.id}`) }"
-        >
+          :class="{ 'bg-primary-50 text-primary-700 font-medium': isActive(`/groups/${group.id}`) }">
           <Tag class="h-4 w-4 shrink-0" />
           <span class="truncate">{{ group.name }}</span>
         </a>
@@ -239,20 +225,14 @@ const handleInviteFriend = async () => {
     <div class="mb-6 px-2">
       <div class="mb-1 flex items-center justify-between px-3 py-1">
         <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase">Friends</span>
-        <button
-          class="rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-          @click="inviteFriendOpen = true"
-        >
+        <button class="rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          @click="inviteFriendOpen = true">
           <Plus class="h-3 w-3" />
         </button>
       </div>
       <div class="space-y-0.5">
-        <a
-          v-for="friend in friends"
-          :key="friend.id"
-          :href="`/friends/${friend.id}`"
-          class="flex items-center gap-3 rounded px-3 py-1.5 text-[13px] text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
-        >
+        <a v-for="friend in friends" :key="friend.id" :href="`/friends/${friend.id}`"
+          class="flex items-center gap-3 rounded px-3 py-1.5 text-[13px] text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900">
           <User class="h-4 w-4 shrink-0" />
           <span class="truncate">{{ friend.name }}</span>
         </a>
@@ -264,17 +244,14 @@ const handleInviteFriend = async () => {
 
     <!-- Profile & Logout -->
     <div class="mt-auto border-t border-gray-100 px-2 py-2">
-      <a
-        href="/profile"
-        class="flex items-center gap-3 rounded px-3 py-1.5 text-[13px] text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
-      >
+      <a href="/profile"
+        class="flex items-center gap-3 rounded px-3 py-1.5 text-[13px] text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900">
         <User class="h-4 w-4" />
         <span>Profile</span>
       </a>
       <button
         class="flex w-full items-center gap-3 rounded px-3 py-1.5 text-[13px] text-gray-500 transition-colors hover:bg-gray-50 hover:text-orange-600"
-        @click="handleLogout"
-      >
+        @click="handleLogout">
         <LogOut class="h-4 w-4" />
         <span>Log out</span>
       </button>
@@ -297,11 +274,7 @@ const handleInviteFriend = async () => {
 
         <div class="grid gap-2">
           <label for="group-description" class="text-sm font-medium">Description (Optional)</label>
-          <Input
-            id="group-description"
-            v-model="createGroupDescription"
-            placeholder="Expenses for our trip..."
-          />
+          <Input id="group-description" v-model="createGroupDescription" placeholder="Expenses for our trip..." />
         </div>
 
         <DialogFooter>
@@ -326,12 +299,7 @@ const handleInviteFriend = async () => {
       <form class="grid gap-4 py-4" @submit.prevent="handleInviteFriend">
         <div class="grid gap-2">
           <label for="invite-email" class="text-sm font-medium">Email Address</label>
-          <Input
-            id="invite-email"
-            v-model="inviteEmail"
-            type="email"
-            placeholder="friend@example.com"
-          />
+          <Input id="invite-email" v-model="inviteEmail" type="email" placeholder="friend@example.com" />
         </div>
 
         <DialogFooter>

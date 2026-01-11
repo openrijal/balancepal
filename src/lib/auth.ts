@@ -4,8 +4,10 @@
 import { createServerClient } from '@supabase/ssr';
 import type { AstroCookies } from 'astro';
 
-const supabaseUrl = import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.SUPABASE_ANON_KEY;
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from 'astro:env/server';
+
+const supabaseUrl = SUPABASE_URL;
+const supabaseAnonKey = SUPABASE_ANON_KEY;
 
 /**
  * Create a Supabase client for server-side operations with cookie handling
