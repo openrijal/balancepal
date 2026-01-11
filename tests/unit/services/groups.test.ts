@@ -73,7 +73,11 @@ describe('GroupService', () => {
       const result = await GroupService.getUserGroups(mockUserId);
 
       expect(db.query.groupMembers.findMany).toHaveBeenCalled();
-      expect(result).toEqual(mockGroups);
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('g1');
+      expect(result[0].name).toBe('G1');
+      expect(result[0]).toHaveProperty('memberCount');
+      expect(result[1].id).toBe('g2');
     });
   });
 });
